@@ -40,6 +40,9 @@ public class SignInIT {
     @Autowired
     StringRedisTemplate redisTemplate;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
     @Container
     @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -49,44 +52,66 @@ public class SignInIT {
     static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
             .withExposedPorts(6379);
 
+    HttpEntity<String> validRequest;
+    HttpEntity<String> invalidRequest;
+
     @BeforeEach
     @Transactional
     void setup() {
         User user = User.builder()
-                .username("user")
+                .username("testUser")
                 .password(new BCryptPasswordEncoder().encode("secret"))
                 .role(Role.USER)
                 .build();
         userRepository.save(user);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String json = """
+                {
+                    "username": "testUser",
+                    "password": "secret"
+                }
+                """;
+
+        validRequest = new HttpEntity<>(json, headers);
+
+        String invalidJson = """
+                {
+                    "username": "notExistentUser",
+                    "password": "secret"
+                }
+                """;
+
+        invalidRequest = new HttpEntity<>(invalidJson, headers);
     }
 
     @Test
     public void givenValidData_whenSignIn_thenAuthenticationSuccessful() throws Exception {
 
-        String json = """
-                {
-                    "username": "user",
-                    "password": "secret"
-                }
-                """;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(json, headers);
-
-        ResponseEntity<String> response = testRestTemplate.postForEntity("/auth/sign-in", request, String.class);
+        ResponseEntity<String> response = testRestTemplate.postForEntity("/auth/sign-in", validRequest, String.class);
+        AuthResponseDto responseDto = objectMapper.readValue(response.getBody(), AuthResponseDto.class);
+        List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+        Set<String> redisKeys = redisTemplate.keys("spring:session:sessions:*");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        AuthResponseDto responseDto = objectMapper.readValue(response.getBody(), AuthResponseDto.class);
-        assertThat(responseDto.username()).isEqualTo("user");
-
-        List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+        assertThat(responseDto.username()).isEqualTo("testUser");
         assertThat(setCookies).anyMatch(cookie -> cookie.startsWith("SESSION"));
-
-        Set<String> keys = redisTemplate.keys("spring:session:sessions:*");
-        assertThat(keys).isNotEmpty();
+        assertThat(redisKeys).isNotEmpty();
     }
+
+    @Test
+    public void givenInvalidData_whenSignIn_thenReturnUnauthorized() throws Exception {
+
+       ResponseEntity<String> response = testRestTemplate.postForEntity("/auth/sign-in", invalidRequest, String.class);
+
+       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+       assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
+       assertThat(response.getBody()).contains("Invalid username or password");
+
+    }
+
+
 }
