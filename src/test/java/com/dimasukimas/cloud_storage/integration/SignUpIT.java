@@ -2,8 +2,11 @@ package com.dimasukimas.cloud_storage.integration;
 
 
 import com.dimasukimas.cloud_storage.dto.AuthResponseDto;
+import com.dimasukimas.cloud_storage.model.Role;
+import com.dimasukimas.cloud_storage.model.User;
 import com.dimasukimas.cloud_storage.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,6 +38,9 @@ public class SignUpIT {
     StringRedisTemplate redisTemplate;
 
     @Autowired
+    ObjectMapper objectMapper;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Container
@@ -47,35 +53,53 @@ public class SignUpIT {
             .withExposedPorts(6379)
             .waitingFor(Wait.forListeningPort());
 
-    @Test
-    public void givenValidRegistrationData_whenSignUp_thenUserAndSessionIsCreatedWithAppropriateHeadersAndStatusCode() throws Exception {
+    private HttpEntity<String> request;
 
+    @BeforeEach
+    void setUpRequest(){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
         String json = """
                 {
-                    "username": "user",
+                    "username": "testUser",
                     "password": "secret"
                 }
                 """;
+        request = new HttpEntity<>(json, headers);
+    }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(json, headers);
+    @Test
+    public void givenValidRegistrationData_whenSignUp_thenUserAndSessionIsCreatedWithAppropriateHeadersAndStatusCode() throws Exception {
 
         ResponseEntity<String> response = testRestTemplate.postForEntity("/auth/sign-up", request, String.class);
+        AuthResponseDto responseDto = objectMapper.readValue(response.getBody(), AuthResponseDto.class);
+        List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+        Set<String> redisKeys = redisTemplate.keys("spring:session:sessions:*");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        AuthResponseDto responseDto = objectMapper.readValue(response.getBody(), AuthResponseDto.class);
-        assertThat(responseDto.username()).isEqualTo("user");
-
-        assertThat(userRepository.findByUsername("user")).isPresent();
-
-        List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+        assertThat(responseDto.username()).isEqualTo("testUser");
+        assertThat(userRepository.findByUsername("testUser")).isPresent();
         assertThat(setCookies).anyMatch(cookie -> cookie.startsWith("SESSION"));
-
-        Set<String> keys = redisTemplate.keys("spring:session:sessions:*");
-        assertThat(keys).isNotEmpty();
+        assertThat(redisKeys).isNotEmpty();
     }
+
+    @Test
+    public void givenDuplicatedUsername_whenSignUp_thenReturnConflictResponse() throws Exception {
+
+        User user = User.builder()
+                .username("testUser")
+                .password("secret")
+                .role(Role.USER)
+                .build();
+
+        userRepository.save(user);
+
+        ResponseEntity<String> response = testRestTemplate.postForEntity("/auth/sign-up", request, String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).contains("Username already exists");
+
+    }
+
 }
