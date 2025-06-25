@@ -6,11 +6,7 @@ server:
 spring:
 
   session:
-    store-type: redis
-
-  redis:
-    host: ${REDIS_HOST:redis}
-    port: ${REDIS_PORT:6379}
+    timeout: 5m
 
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -25,6 +21,13 @@ spring:
         hibernate:
           format-sql: true
 
+logging:
+  level:
+    org.springframework.session: DEBUG
+    org.springframework.data.redis: DEBUG
+
+cors:
+  allowedOrigin: http://localhost
 
 
 
