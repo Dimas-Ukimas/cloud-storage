@@ -24,10 +24,15 @@ jobs:
           key: maven-${{ hashFiles('**/pom.xml') }}
 
       - name: Test with Maven
+        env:
+          SPRING_PROFILES_ACTIVE: dev
+          DB_HOST: postgres
+          DB_PORT: 5432
+          DB_NAME: devdb
+          DB_USER: user
+          DB_PASSWORD: pass
+          SPRING_REDIS_HOST: redis
         run: mvn test
-
-      - name: Build with Maven
-        run: mvn clean package -DskipTests
 
       - name: Log in to DockerHub
         uses: docker/login-action@v3

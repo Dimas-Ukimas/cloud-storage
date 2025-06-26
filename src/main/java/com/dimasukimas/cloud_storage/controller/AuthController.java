@@ -37,9 +37,7 @@ public class AuthController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<AuthResponseDto> signUp(@Valid @RequestBody SignUpRequestDto dto, HttpServletRequest request) {
-
         UserDetailsImpl registeredUser = userService.signUp(dto);
-
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(
                         registeredUser,
@@ -48,9 +46,7 @@ public class AuthController {
                 );
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
-
         request.getSession(true);
-
         AuthResponseDto response = new AuthResponseDto(registeredUser.getUsername());
 
         return ResponseEntity
@@ -60,16 +56,12 @@ public class AuthController {
 
     @PostMapping("/sign-in")
     public ResponseEntity<AuthResponseDto> signIn(@Valid @RequestBody SignInRequestDto dto, HttpServletRequest request) {
-
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(dto.username(), dto.password());
-
         Authentication authResult = authenticationManager.authenticate(authRequest);
 
         SecurityContextHolder.getContext().setAuthentication(authResult);
-
         UserDetails userDetails = (UserDetails) authResult.getPrincipal();
         AuthResponseDto response = new AuthResponseDto(userDetails.getUsername());
-
         request.getSession(true);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
