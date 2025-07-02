@@ -4,6 +4,8 @@ import com.dimasukimas.cloud_storage.dto.AuthResponseDto;
 import com.dimasukimas.cloud_storage.dto.SignInRequestDto;
 import com.dimasukimas.cloud_storage.dto.SignUpRequestDto;
 import com.dimasukimas.cloud_storage.dto.UserDetailsImpl;
+import com.dimasukimas.cloud_storage.dto.AuthRequestDto;
+import com.dimasukimas.cloud_storage.dto.UsernameDto;
 import com.dimasukimas.cloud_storage.exception.UnauthorizedUserSignOutException;
 import com.dimasukimas.cloud_storage.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +40,7 @@ public class AuthController {
     @PostMapping("/sign-up")
     public ResponseEntity<AuthResponseDto> signUp(@Valid @RequestBody SignUpRequestDto dto, HttpServletRequest request) {
         UserDetailsImpl registeredUser = userService.signUp(dto);
+    public ResponseEntity<UsernameDto> signUp(@Valid @RequestBody AuthRequestDto dto, HttpServletRequest request) {
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(
                         registeredUser,
@@ -47,7 +50,7 @@ public class AuthController {
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
         request.getSession(true);
-        AuthResponseDto response = new AuthResponseDto(registeredUser.getUsername());
+        UsernameDto response = new UsernameDto(registeredUser.getUsername());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -55,7 +58,8 @@ public class AuthController {
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<AuthResponseDto> signIn(@Valid @RequestBody SignInRequestDto dto, HttpServletRequest request) {
+    @SignInDocs
+    public ResponseEntity<UsernameDto> signIn(@Valid @RequestBody AuthRequestDto dto, HttpServletRequest request) {
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(dto.username(), dto.password());
         Authentication authResult = authenticationManager.authenticate(authRequest);
 
@@ -64,7 +68,9 @@ public class AuthController {
         AuthResponseDto response = new AuthResponseDto(userDetails.getUsername());
         request.getSession(true);
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
     }
 
     @PostMapping("/sign-out")
@@ -86,6 +92,8 @@ public class AuthController {
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 }

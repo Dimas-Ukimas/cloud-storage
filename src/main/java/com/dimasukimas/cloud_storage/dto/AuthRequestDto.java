@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record SignUpRequestDto(
+public record AuthRequestDto(
 
         @NotBlank(message = "Login must not be blank")
         @Size(min = 5, max = 20, message = "Login must be between 5 and 20 characters")
@@ -15,6 +15,5 @@ public record SignUpRequestDto(
         @Size(min = 5, max = 20, message = "Password must be between 5 and 20 characters")
         @Pattern(regexp = "^[a-zA-Z0-9!@#$%^&*(),.?\":{}|<>\\[\\]/`~+=\\-_'\\\\]*$",
                 message = "Password can contain only latin letters, digits, and special characters")
-        String password
-) {
+        String password) {
 }
