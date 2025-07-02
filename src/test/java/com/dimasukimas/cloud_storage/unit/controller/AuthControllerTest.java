@@ -2,7 +2,7 @@ package com.dimasukimas.cloud_storage.unit.controller;
 
 import com.dimasukimas.cloud_storage.config.TestSecurityConfig;
 import com.dimasukimas.cloud_storage.controller.AuthController;
-import com.dimasukimas.cloud_storage.dto.UserDetailsImpl;
+import com.dimasukimas.cloud_storage.dto.CustomUserDetails;
 import com.dimasukimas.cloud_storage.exception.handler.GlobalExceptionHandler;
 import com.dimasukimas.cloud_storage.service.UserService;
 import org.hamcrest.Matchers;
@@ -82,7 +82,7 @@ public class AuthControllerTest {
     @Test
     void signUp_shouldReturnUsernameWithAppropriateStatusCode() throws Exception {
 
-        when(userService.signUp(any())).thenReturn(new UserDetailsImpl("testUser", null, List.of()));
+        when(userService.signUp(any())).thenReturn(new CustomUserDetails(1L, "testUser", null, List.of()));
 
         mockMvc.perform(post("/auth/sign-up")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -105,7 +105,7 @@ public class AuthControllerTest {
     @Test
     void signIn_shouldReturnUsernameWithAppropriateHeadersAndStatusCode() throws Exception {
 
-        when(authentication.getPrincipal()).thenReturn(new User("testUser", "encodedPassword", List.of()));
+        when(authentication.getPrincipal()).thenReturn(new CustomUserDetails(1L, "testUser", "encodedPassword", List.of()));
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authentication);
 
         mockMvc.perform(post("/auth/sign-in")

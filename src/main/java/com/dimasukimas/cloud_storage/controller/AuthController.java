@@ -1,13 +1,14 @@
 package com.dimasukimas.cloud_storage.controller;
 
-import com.dimasukimas.cloud_storage.dto.AuthResponseDto;
-import com.dimasukimas.cloud_storage.dto.SignInRequestDto;
-import com.dimasukimas.cloud_storage.dto.SignUpRequestDto;
-import com.dimasukimas.cloud_storage.dto.UserDetailsImpl;
 import com.dimasukimas.cloud_storage.dto.AuthRequestDto;
 import com.dimasukimas.cloud_storage.dto.UsernameDto;
+import com.dimasukimas.cloud_storage.dto.CustomUserDetails;
 import com.dimasukimas.cloud_storage.exception.UnauthorizedUserSignOutException;
 import com.dimasukimas.cloud_storage.service.UserService;
+import com.dimasukimas.cloud_storage.swagger.SignInDocs;
+import com.dimasukimas.cloud_storage.swagger.SignOutDocs;
+import com.dimasukimas.cloud_storage.swagger.SignUpDocs;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -21,7 +22,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,15 +32,16 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "Authorization", description = "Authorization operations")
 public class AuthController {
 
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<AuthResponseDto> signUp(@Valid @RequestBody SignUpRequestDto dto, HttpServletRequest request) {
-        UserDetailsImpl registeredUser = userService.signUp(dto);
+    @SignUpDocs
     public ResponseEntity<UsernameDto> signUp(@Valid @RequestBody AuthRequestDto dto, HttpServletRequest request) {
+        CustomUserDetails registeredUser = userService.signUp(dto);
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(
                         registeredUser,
@@ -64,8 +65,8 @@ public class AuthController {
         Authentication authResult = authenticationManager.authenticate(authRequest);
 
         SecurityContextHolder.getContext().setAuthentication(authResult);
-        UserDetails userDetails = (UserDetails) authResult.getPrincipal();
-        AuthResponseDto response = new AuthResponseDto(userDetails.getUsername());
+        CustomUserDetails userDetails = (CustomUserDetails) authResult.getPrincipal();
+        UsernameDto response = new UsernameDto(userDetails.getUsername());
         request.getSession(true);
 
         return ResponseEntity
@@ -74,6 +75,7 @@ public class AuthController {
     }
 
     @PostMapping("/sign-out")
+    @SignOutDocs
     public ResponseEntity<Void> signOut(HttpServletRequest request, HttpServletResponse response) {
 
         Optional.ofNullable(request.getSession(false))

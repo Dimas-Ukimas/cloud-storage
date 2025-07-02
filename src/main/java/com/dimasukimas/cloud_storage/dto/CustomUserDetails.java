@@ -5,9 +5,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
-public record UserDetailsImpl(String username,
-                              String password,
-                              Collection<? extends GrantedAuthority> authorities
+public record CustomUserDetails(Long id, String username,
+                                String password,
+                                Collection<? extends GrantedAuthority> authorities
 ) implements UserDetails {
 
     @Override

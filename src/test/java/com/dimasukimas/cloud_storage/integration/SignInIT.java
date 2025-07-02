@@ -1,6 +1,6 @@
 package com.dimasukimas.cloud_storage.integration;
 
-import com.dimasukimas.cloud_storage.dto.AuthResponseDto;
+import com.dimasukimas.cloud_storage.dto.UsernameDto;
 import com.dimasukimas.cloud_storage.model.Role;
 import com.dimasukimas.cloud_storage.model.User;
 import com.dimasukimas.cloud_storage.repository.UserRepository;
@@ -49,6 +49,7 @@ public class SignInIT {
 
     @Container
     @ServiceConnection
+    @SuppressWarnings("resource")
     static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
             .withExposedPorts(6379);
 
@@ -58,6 +59,7 @@ public class SignInIT {
     @BeforeEach
     @Transactional
     void setup() {
+        userRepository.deleteAll();
         User user = User.builder()
                 .username("testUser")
                 .password(new BCryptPasswordEncoder().encode("secret"))
@@ -91,7 +93,7 @@ public class SignInIT {
     public void givenValidData_whenSignIn_thenAuthenticationSuccessful() throws Exception {
 
         ResponseEntity<String> response = testRestTemplate.postForEntity("/auth/sign-in", validRequest, String.class);
-        AuthResponseDto responseDto = objectMapper.readValue(response.getBody(), AuthResponseDto.class);
+        UsernameDto responseDto = objectMapper.readValue(response.getBody(), UsernameDto.class);
         List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
         Set<String> redisKeys = redisTemplate.keys("spring:session:sessions:*");
 
@@ -112,6 +114,4 @@ public class SignInIT {
        assertThat(response.getBody()).contains("Invalid username or password");
 
     }
-
-
 }

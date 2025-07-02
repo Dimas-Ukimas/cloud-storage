@@ -1,7 +1,7 @@
 package com.dimasukimas.cloud_storage.unit.controller;
 
-import com.dimasukimas.cloud_storage.dto.SignUpRequestDto;
-import com.dimasukimas.cloud_storage.dto.UserDetailsImpl;
+import com.dimasukimas.cloud_storage.dto.AuthRequestDto;
+import com.dimasukimas.cloud_storage.dto.CustomUserDetails;
 import com.dimasukimas.cloud_storage.exception.UsernameAlreadyExistsException;
 import com.dimasukimas.cloud_storage.mapper.UserMapper;
 import com.dimasukimas.cloud_storage.model.Role;
@@ -42,7 +42,7 @@ public class UserServiceTest {
 
     @Test
     void signUp_shouldEncodePassword() {
-        SignUpRequestDto userInfo = new SignUpRequestDto("user", "rawPassword");
+        AuthRequestDto userInfo = new AuthRequestDto("user", "rawPassword");
         String encodedPassword = "encodedPassword";
 
         User userToSave = User.builder()
@@ -53,9 +53,9 @@ public class UserServiceTest {
 
         when(passwordEncoder.encode("rawPassword")).thenReturn(encodedPassword);
         when(userRepository.save(any(User.class))).thenReturn(userToSave);
-        when(userMapper.toDto(any(User.class))).thenReturn(new UserDetailsImpl("user", "encodedPassword", List.of()));
+        when(userMapper.toUserDetails(any(User.class))).thenReturn(new CustomUserDetails(1L,"user", "encodedPassword", List.of()));
 
-        UserDetailsImpl response = userService.signUp(userInfo);
+        CustomUserDetails response = userService.signUp(userInfo);
 
         verify(passwordEncoder).encode("rawPassword");
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -67,7 +67,7 @@ public class UserServiceTest {
 
     @Test
     void signUp_whenUsernameExists_shouldThrowCustomException(){
-        SignUpRequestDto userInfo = new SignUpRequestDto("user", "rawPassword");
+        AuthRequestDto userInfo = new AuthRequestDto("user", "rawPassword");
 
         when(userRepository.save(any()))
                 .thenThrow(new DataIntegrityViolationException("Duplicate username"));

@@ -1,9 +1,7 @@
 package com.dimasukimas.cloud_storage.integration;
 
 
-import com.dimasukimas.cloud_storage.dto.AuthResponseDto;
-import com.dimasukimas.cloud_storage.model.Role;
-import com.dimasukimas.cloud_storage.model.User;
+import com.dimasukimas.cloud_storage.dto.UsernameDto;
 import com.dimasukimas.cloud_storage.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +47,7 @@ public class SignUpIT {
 
     @Container
     @ServiceConnection
+    @SuppressWarnings("resource")
     static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
             .withExposedPorts(6379)
             .waitingFor(Wait.forListeningPort());
@@ -70,9 +69,8 @@ public class SignUpIT {
 
     @Test
     public void givenValidRegistrationData_whenSignUp_thenUserAndSessionIsCreatedWithAppropriateHeadersAndStatusCode() throws Exception {
-
         ResponseEntity<String> response = testRestTemplate.postForEntity("/auth/sign-up", request, String.class);
-        AuthResponseDto responseDto = objectMapper.readValue(response.getBody(), AuthResponseDto.class);
+        UsernameDto responseDto = objectMapper.readValue(response.getBody(), UsernameDto.class);
         List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
         Set<String> redisKeys = redisTemplate.keys("spring:session:sessions:*");
 
@@ -86,20 +84,11 @@ public class SignUpIT {
 
     @Test
     public void givenDuplicatedUsername_whenSignUp_thenReturnConflictResponse() throws Exception {
-
-        User user = User.builder()
-                .username("testUser")
-                .password("secret")
-                .role(Role.USER)
-                .build();
-
-        userRepository.save(user);
+        testRestTemplate.postForEntity("/auth/sign-up", request, String.class);
 
         ResponseEntity<String> response = testRestTemplate.postForEntity("/auth/sign-up", request, String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).contains("Username already exists");
-
     }
-
 }

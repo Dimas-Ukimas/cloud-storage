@@ -1,7 +1,7 @@
 package com.dimasukimas.cloud_storage.service;
 
-import com.dimasukimas.cloud_storage.dto.SignUpRequestDto;
-import com.dimasukimas.cloud_storage.dto.UserDetailsImpl;
+import com.dimasukimas.cloud_storage.dto.AuthRequestDto;
+import com.dimasukimas.cloud_storage.dto.CustomUserDetails;
 import com.dimasukimas.cloud_storage.exception.UsernameAlreadyExistsException;
 import com.dimasukimas.cloud_storage.mapper.UserMapper;
 import com.dimasukimas.cloud_storage.model.Role;
@@ -17,14 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final UserMapper mapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UserDetailsImpl signUp(SignUpRequestDto userInfo) {
+    @Transactional
+    public CustomUserDetails signUp(AuthRequestDto userInfo) {
 
         String encodedPassword = passwordEncoder.encode(userInfo.password());
 
@@ -42,13 +42,13 @@ public class UserService implements UserDetailsService {
             throw new UsernameAlreadyExistsException("Username already exists");
         }
 
-        return mapper.toDto(savedUser);
+        return mapper.toUserDetails(savedUser);
     }
 
     @Override
-    public UserDetailsImpl loadUserByUsername(String username) throws UsernameNotFoundException {
+    public CustomUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
-                .map(mapper::toDto)
+                .map(mapper::toUserDetails)
                 .orElseThrow(() -> new UsernameNotFoundException("User was not found"));
     }
 }
