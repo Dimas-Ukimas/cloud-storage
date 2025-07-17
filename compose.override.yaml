@@ -8,7 +8,12 @@ services:
       POSTGRES_PASSWORD: pass
 
     ports:
-      - "5432:5432"
+      - "5432"
+
+  minio:
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
 
   app:
     build:
@@ -21,6 +26,9 @@ services:
       DB_NAME: devdb
       DB_USER: user
       DB_PASSWORD: pass
+      MINIO_URL: http://minio:9000
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     ports:
       - "5005:5005"
