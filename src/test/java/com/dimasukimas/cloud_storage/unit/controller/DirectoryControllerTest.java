@@ -2,21 +2,21 @@ package com.dimasukimas.cloud_storage.unit.controller;
 
 
 import com.dimasukimas.cloud_storage.config.TestSecurityConfig;
+import com.dimasukimas.cloud_storage.config.WithCustomUser;
 import com.dimasukimas.cloud_storage.controller.DirectoryController;
 import com.dimasukimas.cloud_storage.dto.DirectoryInfoDto;
 import com.dimasukimas.cloud_storage.exception.handler.GlobalExceptionHandler;
-import com.dimasukimas.cloud_storage.service.FileManagerService;
+import com.dimasukimas.cloud_storage.service.ResourceManagerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.data.redis.connection.ReactiveStreamCommands.AddStreamRecord.body;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -28,22 +28,14 @@ public class DirectoryControllerTest {
     MockMvc mockMvc;
 
     @MockitoBean
-    public FileManagerService fileManagerService;
+    public ResourceManagerService resourceManagerService;
 
-    private String fileInfoJson = """
-            {
-               "path": ""
-               "name": "folder1/",
-               "size": ""
-               "type": "DIRECTORY"
-             }
-            """;
 
     @Test
+    @WithCustomUser
     void whenCreateValidDirectory_shouldReturnDirectoryInfo() throws Exception {
-
-        DirectoryInfoDto directoryInfo = new DirectoryInfoDto("", "folder1/", "DIRECTORY");
-        when(fileManagerService.createDirectory(1L, "folder1/")).thenReturn(directoryInfo);
+        DirectoryInfoDto mockDirectoryInfo = new DirectoryInfoDto("", "folder1", "DIRECTORY");
+        when(resourceManagerService.createDirectory(1L, "folder1/")).thenReturn(mockDirectoryInfo);
 
 
         mockMvc.perform(post("/directory")
