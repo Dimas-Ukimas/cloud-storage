@@ -1,4 +1,4 @@
-package com.dimasukimas.cloud_storage.config;
+package com.dimasukimas.cloud_storage.config.security;
 
 import org.springframework.security.test.context.support.WithSecurityContext;
 

@@ -1,4 +1,4 @@
-package com.dimasukimas.cloud_storage.unit.controller;
+package com.dimasukimas.cloud_storage.unit.service;
 
 import com.dimasukimas.cloud_storage.dto.AuthRequestDto;
 import com.dimasukimas.cloud_storage.dto.CustomUserDetails;

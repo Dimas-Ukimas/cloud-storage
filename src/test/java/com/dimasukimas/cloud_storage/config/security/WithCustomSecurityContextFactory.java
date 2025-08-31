@@ -1,4 +1,4 @@
-package com.dimasukimas.cloud_storage.config;
+package com.dimasukimas.cloud_storage.config.security;
 
 import com.dimasukimas.cloud_storage.dto.CustomUserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,7 +11,6 @@ import org.springframework.security.test.context.support.WithSecurityContextFact
 import java.util.List;
 
 public class WithCustomSecurityContextFactory implements WithSecurityContextFactory<WithCustomUser> {
-
 
     @Override
     public SecurityContext createSecurityContext(WithCustomUser annotation) {

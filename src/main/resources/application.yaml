@@ -15,7 +15,7 @@ spring:
   data:
     redis:
       host: ${SPRING_REDIS_HOST}
-      port: 6379
+      port: ${SPRING_REDIS_PORT}
 
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -37,3 +37,9 @@ spring:
     url: ${MINIO_ENDPOINT}
     accessKey: ${MINIO_USER}
     secretKey: ${MINIO_PASSWORD}
+    bucket-name: user-files
+    directory-splitter: /
+    keep-file: .keep
+
+  cors:
+    allowedOrigin: http://localhost

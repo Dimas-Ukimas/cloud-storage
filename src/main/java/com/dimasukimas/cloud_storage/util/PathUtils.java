@@ -1,12 +1,10 @@
 package com.dimasukimas.cloud_storage.util;
 
-import java.util.Optional;
-
-public class PathExtractor {
+public class PathUtils {
 
     private static final String DIRECTORY_SPLITTER = "/";
 
-    public static String extractParentPath(String path) {
+    public static String extractParentPathToResource(String path) {
         String normalizedPath = normalizePath(path);
         int lastSplitterIndex = normalizedPath.lastIndexOf(DIRECTORY_SPLITTER);
 
@@ -15,20 +13,24 @@ public class PathExtractor {
                 : "";
     }
 
-    public static String extractFileName(String path) {
+    public static String extractResourceName(String path) {
         String normalizedPath = normalizePath(path);
         int lastSplitterIndex = normalizedPath.lastIndexOf(DIRECTORY_SPLITTER);
         String name = lastSplitterIndex != -1 ? normalizedPath.substring(lastSplitterIndex + 1) : normalizedPath;
 
-        return path.endsWith(DIRECTORY_SPLITTER)
-                ? name + DIRECTORY_SPLITTER
-                : name;
+        return name;
+    }
+
+    public static String createUserDirectoryName(Long userId){
+        return String.format("user-%d-files/", userId);
     }
 
     private static String normalizePath(String path) {
+        String pathWithoutRootDir = path.replaceFirst("^user-\\d+-files/", "");
+
         return path.endsWith(DIRECTORY_SPLITTER)
-                ? path.substring(0, path.length() - 1)
-                : path;
+                ? pathWithoutRootDir.substring(0, path.length() - 1)
+                : pathWithoutRootDir;
     }
 
 }

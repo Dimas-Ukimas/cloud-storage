@@ -3,7 +3,7 @@ package com.dimasukimas.cloud_storage.controller;
 import com.dimasukimas.cloud_storage.dto.AuthRequestDto;
 import com.dimasukimas.cloud_storage.dto.UsernameDto;
 import com.dimasukimas.cloud_storage.dto.CustomUserDetails;
-import com.dimasukimas.cloud_storage.exception.UnauthorizedUserSignOutException;
+import com.dimasukimas.cloud_storage.exception.UnauthorizedUserException;
 import com.dimasukimas.cloud_storage.service.UserService;
 import com.dimasukimas.cloud_storage.swagger.SignInDocs;
 import com.dimasukimas.cloud_storage.swagger.SignOutDocs;
@@ -77,12 +77,11 @@ public class AuthController {
     @PostMapping("/sign-out")
     @SignOutDocs
     public ResponseEntity<Void> signOut(HttpServletRequest request, HttpServletResponse response) {
-
         Optional.ofNullable(request.getSession(false))
                 .ifPresentOrElse(
                         HttpSession::invalidate,
                         () -> {
-                            throw new UnauthorizedUserSignOutException("Cannot sign-out unauthorized user");
+                            throw new UnauthorizedUserException("Cannot sign-out unauthorized user");
                         }
                 );
 

@@ -1,5 +1,6 @@
 package com.dimasukimas.cloud_storage.service;
 
+import com.dimasukimas.cloud_storage.config.event.UserRegisteredEvent;
 import com.dimasukimas.cloud_storage.dto.AuthRequestDto;
 import com.dimasukimas.cloud_storage.dto.CustomUserDetails;
 import com.dimasukimas.cloud_storage.exception.UsernameAlreadyExistsException;
@@ -8,6 +9,7 @@ import com.dimasukimas.cloud_storage.model.Role;
 import com.dimasukimas.cloud_storage.model.User;
 import com.dimasukimas.cloud_storage.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,10 +24,10 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final UserMapper mapper;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CustomUserDetails signUp(AuthRequestDto userInfo) {
-
         String encodedPassword = passwordEncoder.encode(userInfo.password());
 
         User user = User.builder()
@@ -41,6 +43,7 @@ public class UserService implements UserDetailsService {
         } catch (DataIntegrityViolationException e) {
             throw new UsernameAlreadyExistsException("Username already exists");
         }
+        eventPublisher.publishEvent(new UserRegisteredEvent(user.getId()));
 
         return mapper.toUserDetails(savedUser);
     }

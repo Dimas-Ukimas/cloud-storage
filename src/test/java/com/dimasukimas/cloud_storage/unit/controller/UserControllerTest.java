@@ -1,7 +1,6 @@
 package com.dimasukimas.cloud_storage.unit.controller;
 
 
-import com.dimasukimas.cloud_storage.config.TestSecurityConfig;
 import com.dimasukimas.cloud_storage.controller.UserController;
 import com.dimasukimas.cloud_storage.dto.UsernameDto;
 import com.dimasukimas.cloud_storage.exception.handler.GlobalExceptionHandler;
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,7 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
-@Import({TestSecurityConfig.class, GlobalExceptionHandler.class})
+@AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 public class UserControllerTest {
 
     @Autowired
@@ -40,7 +41,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser
-    void getCurrentUser_shouldReturnUsernameWithAppropriateStatusCode() throws Exception{
+    void getCurrentUser_shouldReturnUsernameWithOk() throws Exception {
         UsernameDto usernameDto = new UsernameDto("user");
 
         when(userMapper.toUserDto(any(UserDetails.class)))

@@ -1,6 +1,6 @@
 package com.dimasukimas.cloud_storage.exception.handler;
 
-import com.dimasukimas.cloud_storage.exception.UnauthorizedUserSignOutException;
+import com.dimasukimas.cloud_storage.exception.UnauthorizedUserException;
 import com.dimasukimas.cloud_storage.exception.UsernameAlreadyExistsException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(UnauthorizedUserSignOutException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorizedUserSignOut(UnauthorizedUserSignOutException ex) {
+    @ExceptionHandler(UnauthorizedUserException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedUserSignOut(UnauthorizedUserException ex) {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(ex.getMessage()));
     }

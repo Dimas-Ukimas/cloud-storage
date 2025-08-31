@@ -1,17 +1,17 @@
-package com.dimasukimas.cloud_storage.config;
+package com.dimasukimas.cloud_storage.config.minio;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
-@ConfigurationProperties(prefix = "minio")
+@ConfigurationProperties(prefix = "spring.minio")
 @Getter
 @Setter
 public class MinioProperties {
 
+    private String bucketName;
     private String url;
     private String accessKey;
     private String secretKey;
+    private String keepFile;
 }
