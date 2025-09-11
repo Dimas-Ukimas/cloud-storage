@@ -25,6 +25,7 @@ logging:
   level:
     org.springframework.session: DEBUG
     org.springframework.data.redis: DEBUG
+    org.springframework.security: DEBUG
 
 cors:
   allowedOrigin: http://localhost

@@ -21,14 +21,16 @@ services:
       dockerfile: Dockerfile
     environment:
       SPRING_PROFILES_ACTIVE: dev
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: devdb
       DB_USER: user
       DB_PASSWORD: pass
       MINIO_URL: http://minio:9000
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: password
+      MINIO_USER: admin
+      MINIO_PASSWORD: password
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     ports:
       - "5005:5005"
