@@ -6,6 +6,7 @@ import com.dimasukimas.cloudstorage.config.container.PostgresContainerInitialize
 import com.dimasukimas.cloudstorage.config.container.RedisContainerInitializer;
 import com.dimasukimas.cloudstorage.config.security.SecurityTestConfig;
 import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
+import com.dimasukimas.cloudstorage.exception.handler.ErrorResponse;
 import com.dimasukimas.cloudstorage.helper.MinioTestHelper;
 import com.dimasukimas.cloudstorage.helper.RequestTestHelper;
 import com.dimasukimas.cloudstorage.helper.UserTestDataHelper;
@@ -91,7 +92,7 @@ public class ResourceOperationsIT {
                 "/directory?path=folder1/",
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<List<ResourceInfoDto>>() {
+                new ParameterizedTypeReference<>() {
                 }
         );
 
@@ -100,6 +101,23 @@ public class ResourceOperationsIT {
                 .assertStatus(HttpStatus.OK)
                 .assertEmptyBody();
     }
+
+    @Test
+    void givenNotExistentPath_whenGetDirectoryContentInfo_thenNotFound() {
+        ResponseEntity<ErrorResponse> response = testRestTemplate.exchange(
+                "/directory?path=non-existent-folder/",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        HttpAssert.create(response)
+                .assertJsonContentType()
+                .assertStatus(HttpStatus.NOT_FOUND)
+                .assertBodyContainsMessage("Resource does not exists");
+    }
+
 
 
 }
