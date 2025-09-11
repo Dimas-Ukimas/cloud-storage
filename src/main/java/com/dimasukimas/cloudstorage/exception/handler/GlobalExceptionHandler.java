@@ -1,5 +1,6 @@
 package com.dimasukimas.cloudstorage.exception.handler;
 
+import com.dimasukimas.cloudstorage.exception.ResourceNotFoundException;
 import com.dimasukimas.cloudstorage.exception.UnauthorizedUserException;
 import com.dimasukimas.cloudstorage.exception.UsernameAlreadyExistsException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -43,6 +44,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse("Invalid username or password"));
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex){
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ex.getMessage()));
     }
 
 }

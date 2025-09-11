@@ -1,8 +1,9 @@
 package com.dimasukimas.cloudstorage.service;
 
 import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
-import com.dimasukimas.cloudstorage.exception.DirectoryAlreadyExists;
+import com.dimasukimas.cloudstorage.exception.ResourceAlreadyExists;
 import com.dimasukimas.cloudstorage.exception.ParentDirectoryNotExistsException;
+import com.dimasukimas.cloudstorage.exception.ResourceNotFoundException;
 import com.dimasukimas.cloudstorage.mapper.ResourceInfoMapper;
 import com.dimasukimas.cloudstorage.repository.StorageRepository;
 import com.dimasukimas.cloudstorage.util.PathUtils;
@@ -23,7 +24,7 @@ public class UserResourceManagerService implements ResourceManagerService {
     public ResourceInfoDto createDirectory(Long userId, String path) {
         String fullPath = getFullPath(userId, path);
 
-        checkTargetResourceNotExists(fullPath);
+        checkResourceNotExists(fullPath);
         checkParentDirectoriesExist(fullPath);
 
         repository.createDirectory(fullPath);
@@ -34,6 +35,7 @@ public class UserResourceManagerService implements ResourceManagerService {
 
     public List<ResourceInfoDto> getDirectoryContentInfo(Long userId, String path) {
         String fullPath = getFullPath(userId, path);
+        checkResourceExists(fullPath);
 
         return repository.getDirectoryContentInfo(fullPath).stream()
                 .map(object -> object.isDir()
@@ -46,9 +48,15 @@ public class UserResourceManagerService implements ResourceManagerService {
         return repository.isObjectExists(path);
     }
 
-    private void checkTargetResourceNotExists(String path) {
+    private void checkResourceExists(String path) {
+        if (!repository.isObjectExists(path)) {
+            throw new ResourceNotFoundException("Resource does not exists");
+        }
+    }
+
+    private void checkResourceNotExists(String path){
         if (repository.isObjectExists(path)) {
-            throw new DirectoryAlreadyExists("Resource is already exists");
+            throw new ResourceAlreadyExists("Resource is already exists");
         }
     }
 
