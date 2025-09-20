@@ -31,7 +31,6 @@ public class MinioResourceManagerService implements ResourceManagerService {
         return mapper.toResDto(repository.createDirectory(fullPath));
     }
 
-
     public List<ResourceInfoDto> getDirectoryContentInfo(Long userId, String path) {
         String fullPath = getFullPath(userId, path);
         checkResourceExists(fullPath);
@@ -62,7 +61,7 @@ public class MinioResourceManagerService implements ResourceManagerService {
 
     private void checkResourceNotExists(String path){
         if (repository.isObjectExists(path)) {
-            throw new ResourceAlreadyExists("Resource is already exists");
+            throw new ResourceAlreadyExistsException("Resource is already exists");
         }
     }
 
