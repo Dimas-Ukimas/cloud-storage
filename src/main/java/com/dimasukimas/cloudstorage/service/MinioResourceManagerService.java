@@ -36,10 +36,9 @@ public class UserResourceManagerService implements ResourceManagerService {
         String fullPath = getFullPath(userId, path);
         checkResourceExists(fullPath);
 
-        return repository.getDirectoryContentInfo(fullPath).stream()
-                .map(object -> object.isDir()
-                        ? mapper.toResDto(object.path(), ResourceType.DIRECTORY.toString())
-                        : mapper.toResDto(object.path(), object.size(), ResourceType.FILE.toString()))
+        return repository.getDirectoryContentInfo(fullPath)
+                .stream()
+                .map(mapper::toResDto)
                 .toList();
     }
 

@@ -1,5 +1,6 @@
 package com.dimasukimas.cloudstorage.dto;
 
+import com.dimasukimas.cloudstorage.service.ResourceType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 public record ResourceInfoDto(
@@ -10,5 +11,5 @@ public record ResourceInfoDto(
         @JsonInclude(JsonInclude.Include.NON_NULL)
         Long size,
 
-        String type) {
+        ResourceType type) {
 }

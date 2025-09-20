@@ -38,7 +38,7 @@ public class DirectoryControllerTest {
     @Test
     @WithCustomUser
     void directoryCreation_shouldReturnDirectoryInfoWithCreated() throws Exception {
-        var dirInfo = new ResourceInfoDto("", DIRECTORY_PATH, null, ResourceType.DIRECTORY.toString());
+        var dirInfo = new ResourceInfoDto("", DIRECTORY_PATH, null, ResourceType.DIRECTORY);
 
         when(resourceManagerService.createDirectory(1L, DIRECTORY_PATH)).thenReturn(dirInfo);
 
@@ -63,8 +63,8 @@ public class DirectoryControllerTest {
     @Test
     @WithCustomUser
     void getDirectoryInfo_shouldReturnInfoWithOk() throws Exception{
-        var resource1 = new ResourceInfoDto("folder1/", "text.txt", 10L, ResourceType.FILE.toString());
-        var resource2 = new ResourceInfoDto("folder1/", "folder2/", null, ResourceType.DIRECTORY.toString());
+        var resource1 = new ResourceInfoDto("folder1/", "text.txt", 10L, ResourceType.FILE);
+        var resource2 = new ResourceInfoDto("folder1/", "folder2/", null, ResourceType.DIRECTORY);
 
         when(resourceManagerService.getDirectoryContentInfo(1L, DIRECTORY_PATH)).thenReturn(List.of(resource1, resource2));
 
@@ -79,6 +79,5 @@ public class DirectoryControllerTest {
                 .andExpect(jsonPath("$[1].size").doesNotExist())
                 .andExpect(jsonPath("$[1].type").value(ResourceType.DIRECTORY.toString()));
     }
-
 
 }
