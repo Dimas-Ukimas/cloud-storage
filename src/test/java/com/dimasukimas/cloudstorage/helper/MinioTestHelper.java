@@ -3,6 +3,7 @@ package com.dimasukimas.cloudstorage.helper;
 import com.dimasukimas.cloudstorage.config.minio.MinioProperties;
 import com.dimasukimas.cloudstorage.exception.MinioOperationException;
 import io.minio.*;
+import io.minio.errors.ErrorResponseException;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,9 @@ public class MinioTestHelper {
                     .bucket(minioProperties.getBucketName())
                     .object(objectName)
                     .build());
+
+        } catch (ErrorResponseException ex) {
+            return Optional.empty();
         } catch (Exception e) {
             throw new RuntimeException("Failed to find object", e);
         }
