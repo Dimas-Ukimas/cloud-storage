@@ -10,4 +10,7 @@ public interface ResourceManagerService {
     List<ResourceInfoDto> getDirectoryContentInfo(Long id, String path);
 
     boolean isResourceExists(String path);
+
+    ResourceInfoDto getResourceInfo(Long id, String path);
+
 }
