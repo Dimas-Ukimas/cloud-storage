@@ -29,6 +29,7 @@ public class SecurityTestConfig {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private static final String USERNAME = "testUser";
 
 
     @Bean
@@ -43,7 +44,7 @@ public class SecurityTestConfig {
     @Bean
     public Filter alwaysAuthFilter() {
         return (ServletRequest request, ServletResponse response, FilterChain chain) -> {
-            var principal = new CustomUserDetails(1L, "testUser", "secret", List.of());
+            var principal = (CustomUserDetails) userService.loadUserByUsername(USERNAME);
             var authentication = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
