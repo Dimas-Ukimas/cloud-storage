@@ -15,7 +15,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UserResourceManagerService implements ResourceManagerService {
+public class MinioResourceManagerService implements ResourceManagerService {
 
     private final StorageRepository repository;
     private final ResourceInfoMapper mapper;
@@ -40,6 +40,14 @@ public class UserResourceManagerService implements ResourceManagerService {
                 .stream()
                 .map(mapper::toResDto)
                 .toList();
+    }
+
+    public ResourceInfoDto getResourceInfo(Long userId, String path) {
+        String fullPath = getFullPath(userId, path);
+
+        ObjectInfo object = repository.findObject(fullPath).orElseThrow(() -> new ResourceNotFoundException("Resource does not exists"));
+
+        return mapper.toResDto(object);
     }
 
     public boolean isResourceExists(String path) {
