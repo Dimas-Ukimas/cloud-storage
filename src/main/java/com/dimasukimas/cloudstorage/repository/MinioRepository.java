@@ -23,9 +23,11 @@ public class MinioRepository implements StorageRepository {
     private final MinioProperties minioProperties;
     private final ObjectInfoMapper mapper;
 
-    public void createDirectory(String path) {
+    public ObjectInfo createDirectory(String path) {
+
+        ObjectWriteResponse object;
         try {
-            minioClient.putObject(PutObjectArgs
+            object = minioClient.putObject(PutObjectArgs
                     .builder()
                     .bucket(minioProperties.getBucketName())
                     .object(path)
@@ -35,6 +37,7 @@ public class MinioRepository implements StorageRepository {
             throw new MinioOperationException("Something went wrong, please, try again later", e);
 
         }
+        return mapper.toObjectInfo(object);
     }
 
     public List<ObjectInfo> getDirectoryContentInfo(String path) {
@@ -63,7 +66,6 @@ public class MinioRepository implements StorageRepository {
 
         return contentInfo;
     }
-
 
     public boolean isObjectExists(String path) {
 

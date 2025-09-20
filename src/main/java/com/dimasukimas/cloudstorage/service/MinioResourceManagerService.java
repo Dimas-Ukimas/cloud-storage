@@ -1,7 +1,8 @@
 package com.dimasukimas.cloudstorage.service;
 
+import com.dimasukimas.cloudstorage.dto.ObjectInfo;
 import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
-import com.dimasukimas.cloudstorage.exception.ResourceAlreadyExists;
+import com.dimasukimas.cloudstorage.exception.ResourceAlreadyExistsException;
 import com.dimasukimas.cloudstorage.exception.ParentDirectoryNotExistsException;
 import com.dimasukimas.cloudstorage.exception.ResourceNotFoundException;
 import com.dimasukimas.cloudstorage.mapper.ResourceInfoMapper;
@@ -27,9 +28,7 @@ public class UserResourceManagerService implements ResourceManagerService {
         checkResourceNotExists(fullPath);
         checkParentDirectoriesExist(fullPath);
 
-        repository.createDirectory(fullPath);
-
-        return mapper.toResDto(fullPath, ResourceType.DIRECTORY.toString());
+        return mapper.toResDto(repository.createDirectory(fullPath));
     }
 
 
