@@ -20,13 +20,13 @@ public class MinioAssert {
         return new MinioAssert(minioHelper);
     }
 
-    public MinioAssert assertDirectoryExist(String objectName) {
-        StatObjectResponse objectStat = minioHelper.findObject(objectName).orElseThrow(() -> new ResourceNotFoundException("Test resource does not exists"));
+    public MinioAssert assertResourceExist(String objectName) {
+        StatObjectResponse objectStat = minioHelper.findObject(objectName).orElseThrow(() -> new ResourceNotFoundException("Test resource " + objectName + " does not exists"));
         assertThat(objectStat.object()).isEqualTo(objectName);
         return this;
     }
 
-    public MinioAssert assertDirectoryNotExists(String objectName) {
+    public MinioAssert assertResourceNotExists(String objectName) {
         Optional<StatObjectResponse> objectStat = minioHelper.findObject(objectName);
         assertThat(objectStat.isEmpty());
         return this;

@@ -3,13 +3,13 @@ package com.dimasukimas.cloudstorage.util.assertion;
 import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
 import com.dimasukimas.cloudstorage.dto.UsernameDto;
 import com.dimasukimas.cloudstorage.exception.handler.ErrorResponse;
+import com.dimasukimas.cloudstorage.service.ResourceType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -62,10 +62,19 @@ public class HttpAssert<T> {
     }
 
     public HttpAssert assertBodyContainsResourceName(String expectedName) {
-
         assertThat(bodyAsStream(ResourceInfoDto.class)
                 .map(ResourceInfoDto::name)
-                .filter(resource -> resource.equals(expectedName)).findAny()).isPresent();
+                .filter(resource -> resource.equals(expectedName))
+                .findAny())
+                .isPresent();
+        return this;
+    }
+
+    public HttpAssert assertResourceType(ResourceType type) {
+        assertThat(bodyAsStream(ResourceInfoDto.class)
+                .map(ResourceInfoDto::type)
+                .equals(type.toString()));
+
         return this;
     }
 

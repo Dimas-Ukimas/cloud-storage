@@ -15,7 +15,7 @@ public class MinioAuthAssert extends AuthAssert<MinioAuthAssert> {
     }
 
     public MinioAuthAssert assertUserMinioRootDirectoryCreated(String objectName) {
-        minioAssert.assertDirectoryExist(objectName);
+        minioAssert.assertResourceExist(objectName);
         return self();
     }
 
