@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -52,7 +53,9 @@ public class MinioRepository implements StorageRepository {
         for (Result<Item> result : results) {
             try {
                 Item item = result.get();
-                boolean isMarkerDirectory = !item.isDir() && item.objectName().equals(path);
+                boolean isMarkerDirectory = item.isDir()
+                        && item.objectName().equals(path)
+                        && item.size()==0;
 
                 if (isMarkerDirectory) {
                     continue;
@@ -93,5 +96,20 @@ public class MinioRepository implements StorageRepository {
         return Optional.ofNullable(mapper.toObjectInfo(object));
     }
 
+    @Override
+    public ObjectInfo upload(String path, InputStream inputStream, long size) {
+        ObjectWriteResponse object;
+        try {
+            object = minioClient.putObject(PutObjectArgs
+                    .builder()
+                    .bucket(minioProperties.getBucketName())
+                    .object(path)
+                    .stream(inputStream, size, -1)
+                    .build());
+        } catch (Exception e) {
+            throw new MinioOperationException("Something went wrong, please, try again later", e);
 
+        }
+        return mapper.toObjectInfo(object, size);
+    }
 }
