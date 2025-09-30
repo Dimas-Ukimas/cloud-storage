@@ -1,5 +1,6 @@
 package com.dimasukimas.cloudstorage.service;
 
+import com.dimasukimas.cloudstorage.config.minio.MinioProperties;
 import com.dimasukimas.cloudstorage.dto.ObjectInfo;
 import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
 import com.dimasukimas.cloudstorage.exception.ResourceAlreadyExistsException;
@@ -19,11 +20,12 @@ public class MinioResourceManagerService implements ResourceManagerService {
 
     private final StorageRepository repository;
     private final ResourceInfoMapper mapper;
+    private final MinioProperties minioProperties;
+    private final PathService pathService;
 
-    private static final String USER_ROOT_DIRECTORY_PATTERN = "user-%d-files/";
-
+    @Override
     public ResourceInfoDto createDirectory(Long userId, String path) {
-        String fullPath = getFullPath(userId, path);
+        String fullPath = addRootDirBefore(userId, path);
 
         checkResourceNotExists(fullPath);
         checkParentDirectoriesExist(fullPath);
@@ -31,8 +33,9 @@ public class MinioResourceManagerService implements ResourceManagerService {
         return mapper.toResDto(repository.createDirectory(fullPath));
     }
 
+    @Override
     public List<ResourceInfoDto> getDirectoryContentInfo(Long userId, String path) {
-        String fullPath = getFullPath(userId, path);
+        String fullPath = addRootDirBefore(userId, path);
         checkResourceExists(fullPath);
 
         return repository.getDirectoryContentInfo(fullPath)
@@ -41,8 +44,9 @@ public class MinioResourceManagerService implements ResourceManagerService {
                 .toList();
     }
 
+    @Override
     public ResourceInfoDto getResourceInfo(Long userId, String path) {
-        String fullPath = getFullPath(userId, path);
+        String fullPath = addRootDirBefore(userId, path);
 
         ObjectInfo object = repository.findObject(fullPath).orElseThrow(() -> new ResourceNotFoundException("Resource does not exists"));
 
@@ -59,14 +63,14 @@ public class MinioResourceManagerService implements ResourceManagerService {
         }
     }
 
-    private void checkResourceNotExists(String path){
+    private void checkResourceNotExists(String path) {
         if (repository.isObjectExists(path)) {
             throw new ResourceAlreadyExistsException("Resource is already exists");
         }
     }
 
     private void checkParentDirectoriesExist(String path) {
-        String parentPath = PathUtils.extractPathToResource(path);
+        String parentPath = pathService.extractFullPathToResource(path);
 
         if (parentPath.isEmpty()) {
             return;
@@ -77,8 +81,8 @@ public class MinioResourceManagerService implements ResourceManagerService {
         }
     }
 
-    private String getFullPath(Long userId, String path) {
-        return String.format(USER_ROOT_DIRECTORY_PATTERN, userId) + path;
+    private String addRootDirBefore(Long userId, String path) {
+        return String.format(minioProperties.getUserRootDirectoryPattern(), userId) + path;
     }
 
 }
