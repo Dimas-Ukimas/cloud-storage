@@ -15,11 +15,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ResourceController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -70,7 +71,11 @@ public class ResourceControllerTest {
     @DisplayName("204 when delete file")
     void deleteFile_shouldReturnNoContent() throws Exception {
 
+        doNothing().when(resourceManagerService).delete(anyLong(), anyString());
 
+        mockMvc.perform(delete("/resource").param("path", "folder1/"))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
     }
 
 }
