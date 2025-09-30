@@ -1,6 +1,7 @@
 package com.dimasukimas.cloudstorage.service;
 
 import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -12,5 +13,7 @@ public interface ResourceManagerService {
     boolean isResourceExists(String path);
 
     ResourceInfoDto getResourceInfo(Long id, String path);
+
+    ResourceInfoDto upload(Long id, String path, MultipartFile file);
 
 }

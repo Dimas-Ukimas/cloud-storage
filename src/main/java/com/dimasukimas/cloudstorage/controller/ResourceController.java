@@ -5,13 +5,10 @@ import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
 import com.dimasukimas.cloudstorage.service.ResourceManagerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/resource")
@@ -23,10 +20,22 @@ public class ResourceController {
     @GetMapping
     public ResponseEntity<ResourceInfoDto> getResourceInfo(@RequestParam String path,
                                                            @AuthenticationPrincipal CustomUserDetails user) {
-        ResourceInfoDto body = resourceManagerService.getResourceInfo(user.id(), path);
+        ResourceInfoDto resInfo = resourceManagerService.getResourceInfo(user.id(), path);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(body);
+                .body(resInfo);
     }
+
+    @PostMapping
+    public ResponseEntity<ResourceInfoDto> upload(@AuthenticationPrincipal CustomUserDetails user,
+                                                  @RequestParam String path,
+                                                  @RequestParam("file") MultipartFile file) {
+        ResourceInfoDto resInfo = resourceManagerService.upload(user.id(), path, file);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(resInfo);
+    }
+
 }

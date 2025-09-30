@@ -10,18 +10,25 @@ import com.dimasukimas.cloudstorage.exception.handler.ErrorResponse;
 import com.dimasukimas.cloudstorage.helper.MinioTestHelper;
 import com.dimasukimas.cloudstorage.helper.RequestTestHelper;
 import com.dimasukimas.cloudstorage.helper.UserTestDataHelper;
+import com.dimasukimas.cloudstorage.service.ResourceType;
+import com.dimasukimas.cloudstorage.util.TestUtils;
 import com.dimasukimas.cloudstorage.util.assertion.HttpAssert;
 import com.dimasukimas.cloudstorage.util.assertion.MinioAssert;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.util.MultiValueMap;
 
 import java.util.List;
 
@@ -50,6 +57,8 @@ public class ResourceOperationsIT {
 
     private static final String USERNAME = "testUser";
     private static final String PASSWORD = "secret";
+    private static final String FILE_NAME = "test.txt";
+
     private String userRootDirectory;
 
     @BeforeEach
@@ -79,7 +88,7 @@ public class ResourceOperationsIT {
                     .assertBodyContainsResourceName("folder1/");
 
             MinioAssert.create(minioHelper)
-                    .assertDirectoryExist(userRootDirectory + "folder1/");
+                    .assertResourceExist(userRootDirectory + "folder1/");
         }
 
         @Test
@@ -103,7 +112,7 @@ public class ResourceOperationsIT {
                     .assertBodyContainsMessage("Resource is already exists");
 
             MinioAssert.create(minioHelper)
-                    .assertDirectoryNotExists(userRootDirectory + "folder1/");
+                    .assertResourceNotExists(userRootDirectory + "folder1/");
         }
 
         @Test
@@ -121,10 +130,8 @@ public class ResourceOperationsIT {
                     .assertBodyContainsMessage("Parent directory does not exists");
 
             MinioAssert.create(minioHelper)
-                    .assertDirectoryNotExists(userRootDirectory + "folder404/folder1/");
+                    .assertResourceNotExists(userRootDirectory + "folder404/folder1/");
         }
-
-
     }
 
     @Nested
@@ -133,7 +140,6 @@ public class ResourceOperationsIT {
 
         @BeforeEach
         void setUp() {
-            minioHelper.clearBucket();
             minioHelper.createDirectory(userRootDirectory + "folder1/");
         }
 
@@ -178,7 +184,6 @@ public class ResourceOperationsIT {
 
         @BeforeEach
         void setUp() {
-            minioHelper.clearBucket();
             minioHelper.createDirectory(userRootDirectory + "folder1/");
         }
 

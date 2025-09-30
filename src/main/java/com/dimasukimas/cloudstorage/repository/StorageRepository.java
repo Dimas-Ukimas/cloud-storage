@@ -2,6 +2,7 @@ package com.dimasukimas.cloudstorage.repository;
 
 import com.dimasukimas.cloudstorage.dto.ObjectInfo;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,4 +15,5 @@ public interface StorageRepository {
 
     Optional<ObjectInfo> findObject(String path);
 
+    ObjectInfo upload(String path, InputStream inputStream, long size);
 }

@@ -3,15 +3,14 @@ package com.dimasukimas.cloudstorage.service;
 import com.dimasukimas.cloudstorage.config.minio.MinioProperties;
 import com.dimasukimas.cloudstorage.dto.ObjectInfo;
 import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
-import com.dimasukimas.cloudstorage.exception.ResourceAlreadyExistsException;
-import com.dimasukimas.cloudstorage.exception.ParentDirectoryNotExistsException;
-import com.dimasukimas.cloudstorage.exception.ResourceNotFoundException;
+import com.dimasukimas.cloudstorage.exception.*;
 import com.dimasukimas.cloudstorage.mapper.ResourceInfoMapper;
 import com.dimasukimas.cloudstorage.repository.StorageRepository;
-import com.dimasukimas.cloudstorage.util.PathUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -51,6 +50,35 @@ public class MinioResourceManagerService implements ResourceManagerService {
         ObjectInfo object = repository.findObject(fullPath).orElseThrow(() -> new ResourceNotFoundException("Resource does not exists"));
 
         return mapper.toResDto(object);
+    }
+
+    @Override
+    public ResourceInfoDto upload(Long userId, String path, MultipartFile file) {
+        String parentPath = addRootDirBefore(userId, path);
+        String fullPath = parentPath + file.getOriginalFilename();
+        checkResourceNotExists(fullPath);
+
+        pathService.extractSubdirectoriesFromPath(path)
+                .stream()
+                .map(subDir -> addRootDirBefore(userId, subDir))
+                .forEach(this::createSubdirectory);
+
+        try {
+            if (file.getSize() <= minioProperties.getFileMaxSize().toMegabytes()) {
+                ObjectInfo objectInfo = repository.upload(fullPath, file.getInputStream(), file.getSize());
+
+                return mapper.toResDto(objectInfo);
+            }
+            throw new MaxSizeExceedingException("File cannot be uploaded due to max size exceeding");
+        } catch (IOException e) {
+            throw new FileProcessingException("Failed to read uploaded file");
+        }
+    }
+
+    private void createSubdirectory(String path) {
+        if (!isResourceExists(path)) {
+            repository.createDirectory(path);
+        }
     }
 
     public boolean isResourceExists(String path) {

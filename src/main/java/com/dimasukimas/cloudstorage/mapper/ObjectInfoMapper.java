@@ -26,6 +26,9 @@ public interface ObjectInfoMapper {
     @Mapping(target = "isDir", constant = "true")
     ObjectInfo toObjectInfo(ObjectWriteResponse object);
 
+    @Mapping(target = "path", expression = "java(object.object())")
+    ObjectInfo toObjectInfo(ObjectWriteResponse object, long size);
+
     @Named("mapIsDirFromPath")
     default boolean mapIsDirFromPath(String path) {
         return path != null && path.endsWith("/");

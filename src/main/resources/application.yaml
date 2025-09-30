@@ -39,7 +39,9 @@ spring:
     secretKey: ${MINIO_PASSWORD}
     bucket-name: user-files
     directory-splitter: /
-    keep-file: .keep
+    user-root-directory-pattern: "user-%d-files/"
+    user-root-directory-regex: "^user-\\d+-files/"
+    file-max-size: 100MB
 
   cors:
     allowedOrigin: http://localhost
