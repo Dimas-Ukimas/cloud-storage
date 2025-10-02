@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,7 +39,7 @@ public class HttpAssert<T> {
     }
 
     public HttpAssert assertBodyContainsUsername(String username) {
-        Object body = getBody();
+        Object body = getBody().orElseThrow(() -> new NullPointerException("Body is null"));
 
         assertThat(body).isInstanceOf(UsernameDto.class);
         assertThat(((UsernameDto) body).username()).contains(username);
@@ -54,7 +54,7 @@ public class HttpAssert<T> {
     }
 
     public HttpAssert assertBodyContainsMessage(String message) {
-        Object body = getBody();
+        Object body = getBody().orElseThrow(() -> new NullPointerException("Body is null"));
 
         assertThat(body).isInstanceOf(ErrorResponse.class);
         assertThat(((ErrorResponse) body).message()).contains(message);
@@ -78,8 +78,8 @@ public class HttpAssert<T> {
         return this;
     }
 
-    public HttpAssert assertEmptyBody() {
-        Object body = getBody();
+    public HttpAssert assertEmptyCollectionBody() {
+        Object body = getBody().orElseThrow(() -> new NullPointerException("Body is null"));
         if (body instanceof Collection<?> c) {
             assertThat(c).isEmpty();
             return this;
@@ -87,13 +87,20 @@ public class HttpAssert<T> {
         throw new AssertionError("Body is not a collection; cannot assert empty");
     }
 
-    private Object getBody() {
+    public HttpAssert assertBodyIsNull() {
+        Optional<Object> body = getBody();
+        assertThat(body).isEmpty();
 
-        return Objects.requireNonNull(response.getBody(), "Body is null");
+        return this;
+    }
+
+    private Optional<Object> getBody() {
+
+        return Optional.ofNullable(response.getBody());
     }
 
     private <E> Stream<E> bodyAsStream(Class<E> elementType) {
-        Object body = getBody();
+        Object body = getBody().orElseThrow(() -> new NullPointerException("Body is null"));
 
         if (elementType.isInstance(body)) {
             return Stream.of(elementType.cast(body));

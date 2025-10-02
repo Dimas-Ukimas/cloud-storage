@@ -28,7 +28,7 @@ public class MinioAssert {
 
     public MinioAssert assertResourceNotExists(String objectName) {
         Optional<StatObjectResponse> objectStat = minioHelper.findObject(objectName);
-        assertThat(objectStat.isEmpty());
+        assertThat(objectStat).isEmpty();
         return this;
     }
 
