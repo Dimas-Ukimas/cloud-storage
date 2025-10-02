@@ -216,6 +216,69 @@ public class ResourceOperationsIT {
                     .assertBodyContainsMessage("Resource does not exists");
         }
     }
+
+    @Nested
+    @DisplayName("POST /resource")
+    class UploadResource {
+
+        @Test
+        @DisplayName("201 when upload file")
+        void givenValidFile_whenUpload_thenReturnCreated() throws Exception {
+            HttpEntity<MultiValueMap<String, Object>> request = TestUtils.createRequestWithTestFile(FILE_NAME, "test");
+
+            ResponseEntity<ResourceInfoDto> response = testRestTemplate.postForEntity(
+                    "/resource?path=folder1/" + FILE_NAME,
+                    request,
+                    ResourceInfoDto.class
+            );
+
+            HttpAssert.create(response)
+                    .assertJsonContentType()
+                    .assertStatus(HttpStatus.CREATED)
+                    .assertBodyContainsResourceName(FILE_NAME)
+                    .assertResourceType(ResourceType.FILE);
+
+            MinioAssert.create(minioHelper)
+                    .assertResourceExist(userRootDirectory + "folder1/" + FILE_NAME);
+        }
+
+        @Test
+        @DisplayName("all subdirectories created when upload file to non-existent path")
+        void givenValidFilePath_whenUpload_thenCreateSubdirectories() throws Exception {
+            HttpEntity<MultiValueMap<String, Object>> request = TestUtils.createRequestWithTestFile(FILE_NAME, "test");
+
+            ResponseEntity<ResourceInfoDto> response = testRestTemplate.postForEntity(
+                    "/resource?path=folder1/folder2/folder3/",
+                    request,
+                    ResourceInfoDto.class
+            );
+
+            MinioAssert.create(minioHelper)
+                    .assertResourceExist(userRootDirectory + "folder1/")
+                    .assertResourceExist(userRootDirectory + "folder1/folder2/")
+                    .assertResourceExist(userRootDirectory + "folder1/folder2/folder3/");
+        }
+
+        @Test
+        @DisplayName("409 when upload already existent file")
+        void givenExistentFilePath_whenUpload_thenReturnConflict() throws Exception {
+            HttpEntity<MultiValueMap<String, Object>> request = TestUtils.createRequestWithTestFile(FILE_NAME, "test");
+            testRestTemplate.postForEntity("/resource?path=folder1/", request, ResourceInfoDto.class);
+
+            ResponseEntity<ErrorResponse> response = testRestTemplate.postForEntity(
+                    "/resource?path=folder1/",
+                    request,
+                    ErrorResponse.class
+            );
+
+            HttpAssert.create(response)
+                    .assertJsonContentType()
+                    .assertStatus(HttpStatus.CONFLICT)
+                    .assertBodyContainsMessage("Resource is already exists");
+
+            MinioAssert.create(minioHelper)
+                    .assertResourceNotExists(userRootDirectory + "folder1/" + FILE_NAME);
+        }
     @Nested
     @DisplayName("DELETE /resource")
     class DeleteResource {
