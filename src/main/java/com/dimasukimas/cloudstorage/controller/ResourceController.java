@@ -38,4 +38,12 @@ public class ResourceController {
                 .body(resInfo);
     }
 
+    @DeleteMapping
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal CustomUserDetails user,
+                                       @RequestParam String path) {
+        resourceManagerService.delete(user.id(), path);
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

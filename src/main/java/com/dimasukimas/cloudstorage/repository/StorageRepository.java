@@ -16,4 +16,6 @@ public interface StorageRepository {
     Optional<ObjectInfo> findObject(String path);
 
     ObjectInfo upload(String path, InputStream inputStream, long size);
+
+    void delete(String path);
 }

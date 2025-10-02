@@ -69,8 +69,7 @@ public class ResourceControllerTest {
     @Test
     @WithCustomUser
     @DisplayName("204 when delete file")
-    void deleteFile_shouldReturnNoContent() throws Exception {
-
+    void deleteResource_shouldReturnNoContent() throws Exception {
         doNothing().when(resourceManagerService).delete(anyLong(), anyString());
 
         mockMvc.perform(delete("/resource").param("path", "folder1/"))

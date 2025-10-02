@@ -27,8 +27,12 @@ public class MinioTestHelper {
                     .object(objectName)
                     .build());
 
-        } catch (ErrorResponseException ex) {
-            return Optional.empty();
+        } catch (ErrorResponseException e) {
+            var code = e.errorResponse().code();
+            if ("NoSuchKey".equals(code)) {
+                return Optional.empty();
+            }
+            throw new RuntimeException("Failed to find object", e);
         } catch (Exception e) {
             throw new RuntimeException("Failed to find object", e);
         }
@@ -85,7 +89,7 @@ public class MinioTestHelper {
     }
 
     public String getUserRootDirectoryPath(long userId) {
-        return String.format("user-%d-files/", userId);
+        return String.format(minioProperties.getUserRootDirectoryPattern(), userId);
     }
 
     private void createBucketIfNotExist() {

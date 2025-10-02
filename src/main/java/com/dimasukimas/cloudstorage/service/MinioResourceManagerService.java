@@ -75,6 +75,14 @@ public class MinioResourceManagerService implements ResourceManagerService {
         }
     }
 
+    @Override
+    public void delete(Long userId, String path) {
+        String fullPath = addRootDirBefore(userId, path);
+        checkResourceExists(fullPath);
+
+        repository.delete(fullPath);
+    }
+
     private void createSubdirectory(String path) {
         if (!isResourceExists(path)) {
             repository.createDirectory(path);

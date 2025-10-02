@@ -16,4 +16,6 @@ public interface ResourceManagerService {
 
     ResourceInfoDto upload(Long id, String path, MultipartFile file);
 
+    void delete(Long id, String path);
+
 }
