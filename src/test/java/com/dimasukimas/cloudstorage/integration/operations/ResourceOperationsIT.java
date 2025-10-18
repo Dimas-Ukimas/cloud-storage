@@ -23,14 +23,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.MultiValueMap;
 
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @IntegrationTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -55,8 +60,6 @@ public class ResourceOperationsIT {
     @Autowired
     private UserTestDataHelper userTestDataHelper;
 
-    private static final String USERNAME = "testUser";
-    private static final String PASSWORD = "secret";
     private static final String FILE_NAME = "test.txt";
 
     private String userRootDirectory;
@@ -65,7 +68,7 @@ public class ResourceOperationsIT {
     void setUp() {
         userTestDataHelper.clearRepository();
         minioHelper.clearBucket();
-        long userId = userTestDataHelper.createUser(USERNAME, PASSWORD);
+        long userId = userTestDataHelper.createUser("testUser", "secret");
         userRootDirectory = minioHelper.createUserRootDirectory(userId);
     }
 
@@ -112,7 +115,7 @@ public class ResourceOperationsIT {
                     .assertBodyContainsMessage("Resource is already exists");
 
             MinioAssert.create(minioHelper)
-                    .assertResourceNotExists(userRootDirectory + "folder1/");
+                    .assertNoDuplicates(userRootDirectory + "folder1/");
         }
 
         @Test
@@ -277,66 +280,152 @@ public class ResourceOperationsIT {
                     .assertBodyContainsMessage("Resource is already exists");
 
             MinioAssert.create(minioHelper)
-                    .assertResourceNotExists(userRootDirectory + "folder1/" + FILE_NAME);
-        }
-    @Nested
-    @DisplayName("DELETE /resource")
-    class DeleteResource {
-
-        @Test
-        @DisplayName("204 when delete file")
-        void givenExistentFilePath_whenDeleteResource_thenReturnNoContent() throws Exception {
-            HttpEntity<MultiValueMap<String, Object>> request = TestUtils.createRequestWithTestFile(FILE_NAME, "content");
-            testRestTemplate.postForEntity("/resource?path=folder1/", request, ResourceInfoDto.class);
-
-            ResponseEntity<Void> response = testRestTemplate.exchange("/resource?path=folder1/" + FILE_NAME,
-                    HttpMethod.DELETE,
-                    null,
-                    Void.class
-            );
-
-            HttpAssert.create(response)
-                    .assertStatus(HttpStatus.NO_CONTENT)
-                    .assertBodyIsNull();
-
-            MinioAssert.create(minioHelper)
-                    .assertResourceNotExists(userRootDirectory + "folder1/" + FILE_NAME);
+                    .assertNoDuplicates(userRootDirectory + "folder1/" + FILE_NAME);
         }
 
+        //TODO написать тест
         @Test
-        @DisplayName("204 with recursive delete when delete directory")
-        void givenExistentDirectoryPath_whenDelete_thenReturnNoContentAndDeleteAllContent() throws Exception {
-            HttpEntity<MultiValueMap<String, Object>> request = TestUtils.createRequestWithTestFile(FILE_NAME, "content");
-            testRestTemplate.postForEntity("/resource?path=folder1/", request, ResourceInfoDto.class);
+        @DisplayName("400 when upload file with invalid body")
+        void givenInvalidBody_whenUpload_thenReturnBadRequest() throws Exception {
 
-            ResponseEntity<Void> response = testRestTemplate.exchange("/resource?path=folder1/",
-                    HttpMethod.DELETE,
-                    null,
-                    Void.class
-            );
-
-            HttpAssert.create(response)
-                    .assertStatus(HttpStatus.NO_CONTENT)
-                    .assertBodyIsNull();
-
-            MinioAssert.create(minioHelper)
-                    .assertResourceNotExists(userRootDirectory + "folder1/")
-                    .assertResourceNotExists(userRootDirectory + "folder1/" + FILE_NAME);
         }
 
 
-        @Test
-        @DisplayName("404 when delete non-existent resource")
-        void givenNotExistentResourcePath_whenDelete_thenReturnNotFound() throws Exception {
-            ResponseEntity<ErrorResponse> response = testRestTemplate.exchange("/resource?path=folder1/",
-                    HttpMethod.DELETE,
-                    null,
-                    ErrorResponse.class
-            );
+        @Nested
+        @DisplayName("DELETE /resource")
+        class DeleteResource {
 
-            HttpAssert.create(response)
-                    .assertStatus(HttpStatus.NOT_FOUND)
-                    .assertBodyContainsMessage("Resource does not exists");
+            @Test
+            @DisplayName("204 when delete file")
+            void givenExistentFilePath_whenDeleteResource_thenReturnNoContent() throws Exception {
+                HttpEntity<MultiValueMap<String, Object>> request = TestUtils.createRequestWithTestFile(FILE_NAME, "content");
+                testRestTemplate.postForEntity("/resource?path=folder1/", request, ResourceInfoDto.class);
+
+                ResponseEntity<Void> response = testRestTemplate.exchange("/resource?path=folder1/" + FILE_NAME,
+                        HttpMethod.DELETE,
+                        null,
+                        Void.class
+                );
+
+                HttpAssert.create(response)
+                        .assertStatus(HttpStatus.NO_CONTENT)
+                        .assertBodyIsNull();
+
+                MinioAssert.create(minioHelper)
+                        .assertResourceNotExists(userRootDirectory + "folder1/" + FILE_NAME);
+            }
+
+            @Test
+            @DisplayName("204 with recursive delete when delete directory")
+            void givenExistentDirectoryPath_whenDelete_thenReturnNoContentAndDeleteAllContent() throws Exception {
+                HttpEntity<MultiValueMap<String, Object>> request = TestUtils.createRequestWithTestFile(FILE_NAME, "content");
+                testRestTemplate.postForEntity("/resource?path=folder1/", request, ResourceInfoDto.class);
+
+                ResponseEntity<Void> response = testRestTemplate.exchange("/resource?path=folder1/",
+                        HttpMethod.DELETE,
+                        null,
+                        Void.class
+                );
+
+                HttpAssert.create(response)
+                        .assertStatus(HttpStatus.NO_CONTENT)
+                        .assertBodyIsNull();
+
+                MinioAssert.create(minioHelper)
+                        .assertResourceNotExists(userRootDirectory + "folder1/")
+                        .assertResourceNotExists(userRootDirectory + "folder1/" + FILE_NAME);
+            }
+
+
+            @Test
+            @DisplayName("404 when delete non-existent resource")
+            void givenNotExistentResourcePath_whenDelete_thenReturnNotFound() throws Exception {
+                ResponseEntity<ErrorResponse> response = testRestTemplate.exchange("/resource?path=folder1/",
+                        HttpMethod.DELETE,
+                        null,
+                        ErrorResponse.class
+                );
+
+                HttpAssert.create(response)
+                        .assertStatus(HttpStatus.NOT_FOUND)
+                        .assertBodyContainsMessage("Resource does not exists");
+            }
+        }
+
+        @Nested
+        @DisplayName("GET resource/download")
+        class DownloadResource {
+
+            @Test
+            @DisplayName("200 when download file")
+            void givenExistentFilePath_whenDownload_thenReturnOk() throws Exception {
+                HttpEntity<MultiValueMap<String, Object>> request = TestUtils.createRequestWithTestFile(FILE_NAME, "content");
+                testRestTemplate.postForEntity("/resource?path=folder1/folder2/", request, ResourceInfoDto.class);
+
+                ResponseEntity<byte[]> response = testRestTemplate.exchange("/resource/download?path=folder1/folder2/" + FILE_NAME,
+                        HttpMethod.GET,
+                        null,
+                        byte[].class
+                );
+
+                HttpAssert.create(response)
+                        .assertStatus(HttpStatus.OK)
+                        .assertHeaderExist(HttpHeaders.CONTENT_DISPOSITION)
+                        .assertHeaderExist(HttpHeaders.CONTENT_LENGTH);
+
+                assertThat(response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION))
+                        .contains("filename=\"" + FILE_NAME + "\"");
+                assertThat(response.getBody()).isEqualTo("content".getBytes());
+            }
+
+            //TODO: проверить почему относительный путь формируется коряво
+            @Test
+            @DisplayName("200 when download directory with proper zip archive structure")
+            void givenExistentDirectoryPath_whenDownload_thenReturnOk() throws Exception {
+                HttpEntity<MultiValueMap<String, Object>> request = TestUtils.createRequestWithTestFile(FILE_NAME, "content");
+                byte[] expectedFileBytes = "content".getBytes();
+                testRestTemplate.postForEntity("/resource?path=folder1/folder2/", request, ResourceInfoDto.class);
+
+                ResponseEntity<byte[]> response = testRestTemplate.exchange("/resource/download?path=folder1/",
+                        HttpMethod.GET,
+                        null,
+                        byte[].class
+                );
+
+                HttpAssert.create(response)
+                        .assertStatus(HttpStatus.OK)
+                        .assertHeaderExist(HttpHeaders.CONTENT_DISPOSITION)
+                        .assertHeaderNotExist(HttpHeaders.CONTENT_LENGTH);
+
+                assertThat(response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION))
+                        .contains("filename=\"folder1.zip\"");
+
+                byte[] zipBytes = response.getBody();
+                assertThat(zipBytes).isNotEmpty();
+
+                List<String> names = new ArrayList<>();
+                Map<String, byte[]> files = new HashMap<>();
+
+                try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
+                    ZipEntry zipEntry;
+
+                    while ((zipEntry = zip.getNextEntry()) != null) {
+                        String name = zipEntry.getName();
+                        names.add(name);
+
+                        assertThat(name).doesNotStartWith("/");
+
+                        if (!zipEntry.isDirectory()) {
+                            files.put(name, zip.readAllBytes());
+                        }
+                        zip.closeEntry();
+                    }
+                }
+                assertThat(names).contains("folder1/");
+                assertThat(names).contains("folder1/folder2/");
+                assertThat(names).contains("folder1/folder2/" + FILE_NAME);
+                assertThat(files.get("folder1/folder2/" + FILE_NAME)).isEqualTo(expectedFileBytes);
+            }
         }
     }
 

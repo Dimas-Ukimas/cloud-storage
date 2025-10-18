@@ -46,12 +46,24 @@ public class HttpAssert<T> {
         return this;
     }
 
+    //TODO переписать метод
     public HttpAssert assertSetCookieHeader() {
         List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
 
         assertThat(setCookies).anyMatch(cookie -> cookie.startsWith("SESSION"));
         return this;
     }
+
+    public HttpAssert assertHeaderExist(String header) {
+        assertThat(response.getHeaders()).containsKey(header);
+        return this;
+    }
+
+    public HttpAssert assertHeaderNotExist(String header) {
+        assertThat(response.getHeaders()).doesNotContainKey(header);
+        return this;
+    }
+
 
     public HttpAssert assertBodyContainsMessage(String message) {
         Object body = getBody().orElseThrow(() -> new NullPointerException("Body is null"));

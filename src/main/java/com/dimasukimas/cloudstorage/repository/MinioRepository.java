@@ -1,7 +1,6 @@
 package com.dimasukimas.cloudstorage.repository;
 
 import com.dimasukimas.cloudstorage.config.minio.MinioProperties;
-import com.dimasukimas.cloudstorage.dto.ObjectInfo;
 import com.dimasukimas.cloudstorage.exception.MinioOperationException;
 import com.dimasukimas.cloudstorage.mapper.ObjectInfoMapper;
 import io.minio.*;
@@ -18,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Spliterator;
+import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
 
 @Repository
@@ -28,46 +28,40 @@ public class MinioRepository implements StorageRepository {
     private final MinioProperties minioProperties;
     private final ObjectInfoMapper mapper;
 
-    public ObjectInfo createDirectory(String path) {
+    @Override
+    public ResourceMetadata createDirectory(String prefix) {
 
         ObjectWriteResponse object;
         try {
             object = minioClient.putObject(PutObjectArgs
                     .builder()
                     .bucket(minioProperties.getBucketName())
-                    .object(path)
+                    .object(prefix)
                     .stream(new ByteArrayInputStream(new byte[0]), 0, -1)
                     .build());
         } catch (Exception e) {
             throw new MinioOperationException("Something went wrong, please, try again later", e);
 
         }
-        return mapper.toObjectInfo(object);
+        return mapper.toMetadata(object);
     }
 
-    public List<ObjectInfo> getDirectoryContentInfo(String path) {
-        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs
-                .builder()
-                .bucket(minioProperties.getBucketName())
-                .prefix(path)
-                .recursive(false)
-                .build());
+    @Override
+    public List<ResourceMetadata> getDirectoryContentInfo(String prefix) {
+        Iterable<Result<Item>> results = findDirectObjects(prefix);
 
-        List<ObjectInfo> contentInfo = new ArrayList<>();
+        List<ResourceMetadata> contentInfo = new ArrayList<>();
         for (Result<Item> result : results) {
             try {
                 Item item = result.get();
 
-                //TODO проверить почему рутовая папка не isDir, проверить, отображается ли она на фронте
-                boolean isMarkerDirectory = item.isDir()
-                        && item.objectName().equals(path)
-                        && item.size() == 0;
+                boolean isCurrentDirectory = item.objectName().equals(prefix);
 
-                if (isMarkerDirectory) {
+                if (isCurrentDirectory) {
                     continue;
                 }
+                contentInfo.add(mapper.toMetadata(item));
 
-                contentInfo.add(mapper.toObjectInfo(item));
             } catch (Exception e) {
                 throw new MinioOperationException("Something went wrong, please, try again later", e);
             }
@@ -76,12 +70,13 @@ public class MinioRepository implements StorageRepository {
         return contentInfo;
     }
 
-    public boolean isObjectExists(String path) {
-
-        return findObject(path).isPresent();
+    @Override
+    public boolean isResourceExists(String prefix) {
+        return findResource(prefix).isPresent();
     }
 
-    public Optional<ObjectInfo> findObject(String path) {
+    @Override
+    public Optional<ResourceMetadata> findResource(String path) {
         StatObjectResponse object;
         try {
             object = minioClient.statObject(StatObjectArgs
@@ -99,47 +94,91 @@ public class MinioRepository implements StorageRepository {
             throw new MinioOperationException("Something went wrong, please, try again later", e);
         }
 
-        return Optional.ofNullable(mapper.toObjectInfo(object));
+        return Optional.ofNullable(mapper.toMetadata(object));
     }
 
     @Override
-    public ObjectInfo upload(String path, InputStream inputStream, long size) {
+    public ResourceMetadata upload(String objectName, InputStream inputStream, long size) {
         ObjectWriteResponse object;
         try {
             object = minioClient.putObject(PutObjectArgs
                     .builder()
                     .bucket(minioProperties.getBucketName())
-                    .object(path)
+                    .object(objectName)
                     .stream(inputStream, size, -1)
                     .build());
         } catch (Exception e) {
             throw new MinioOperationException("Something went wrong, please, try again later", e);
 
         }
-        return mapper.toObjectInfo(object, size);
+        return mapper.toMetadata(object, size);
     }
 
     @Override
-    public void delete(String path) {
-        boolean isDir = path.endsWith(minioProperties.getDirectorySplitter());
-
-        if (isDir) {
-            List<DeleteObject> deleteObjects = convertDirectoryContentToDeleteObjects(path);
-            removeObjects(deleteObjects);
-        } else {
-            removeObject(path);
-        }
+    public void deleteDirectory(String prefix) {
+        Iterable<Result<Item>> objects = findAllObjects(prefix);
+        List<DeleteObject> deleteObjects = convertToDeleteObjects(objects);
+        removeObjects(deleteObjects);
     }
 
-    private List<DeleteObject> convertDirectoryContentToDeleteObjects(String path) {
-        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs
+    @Override
+    public void deleteFile(String prefix) {
+        removeObject(prefix);
+    }
+
+    @Override
+    public Supplier<InputStream> download(String prefix) {
+        return () -> {
+            InputStream content;
+            try {
+                content = minioClient.getObject(GetObjectArgs
+                        .builder()
+                        .bucket(minioProperties.getBucketName())
+                        .object(prefix)
+                        .build());
+            } catch (Exception e) {
+                throw new MinioOperationException("Something went wrong, please, try again later", e);
+            }
+            return content;
+        };
+    }
+
+    @Override
+    public List<ResourceMetadata> listAll(String prefix) {
+        Iterable<Result<Item>> results = findAllObjects(prefix);
+
+        List<ResourceMetadata> resources = new ArrayList<>();
+        for (Result<Item> result : results) {
+            try {
+                Item item = result.get();
+                resources.add(mapper.toMetadata(item));
+            } catch (Exception e) {
+                throw new MinioOperationException("Something went wrong, please, try again later", e);
+            }
+        }
+        return resources;
+    }
+
+    private Iterable<Result<Item>> findAllObjects(String prefix) {
+        return minioClient.listObjects(ListObjectsArgs
                 .builder()
                 .bucket(minioProperties.getBucketName())
-                .prefix(path)
+                .prefix(prefix)
                 .recursive(true)
                 .build());
+    }
 
-        Spliterator<Result<Item>> spliterator = results.spliterator();
+    private Iterable<Result<Item>> findDirectObjects(String prefix) {
+        return minioClient.listObjects(ListObjectsArgs
+                .builder()
+                .bucket(minioProperties.getBucketName())
+                .prefix(prefix)
+                .recursive(false)
+                .build());
+    }
+
+    private List<DeleteObject> convertToDeleteObjects(Iterable<Result<Item>> items) {
+        Spliterator<Result<Item>> spliterator = items.spliterator();
 
         return StreamSupport.stream(spliterator, false)
                 .map(item -> {
@@ -150,18 +189,6 @@ public class MinioRepository implements StorageRepository {
                     }
                 })
                 .toList();
-    }
-
-    private void removeObject(String path) {
-        try {
-            minioClient.removeObject(RemoveObjectArgs
-                    .builder()
-                    .bucket(minioProperties.getBucketName())
-                    .object(path)
-                    .build());
-        } catch (Exception e) {
-            throw new MinioOperationException("Something went wrong, please, try again later", e);
-        }
     }
 
     private void removeObjects(List<DeleteObject> deleteObjects) {
@@ -182,6 +209,18 @@ public class MinioRepository implements StorageRepository {
             }
         } catch (
                 Exception e) {
+            throw new MinioOperationException("Something went wrong, please, try again later", e);
+        }
+    }
+
+    private void removeObject(String prefix) {
+        try {
+            minioClient.removeObject(RemoveObjectArgs
+                    .builder()
+                    .bucket(minioProperties.getBucketName())
+                    .object(prefix)
+                    .build());
+        } catch (Exception e) {
             throw new MinioOperationException("Something went wrong, please, try again later", e);
         }
     }

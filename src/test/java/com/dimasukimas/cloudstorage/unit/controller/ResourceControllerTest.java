@@ -3,6 +3,10 @@ package com.dimasukimas.cloudstorage.unit.controller;
 import com.dimasukimas.cloudstorage.config.security.WithCustomUser;
 import com.dimasukimas.cloudstorage.controller.ResourceController;
 import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
+import com.dimasukimas.cloudstorage.repository.ContentSource;
+import com.dimasukimas.cloudstorage.repository.ObjectContentSource;
+import com.dimasukimas.cloudstorage.repository.ZipContentSource;
+import com.dimasukimas.cloudstorage.repository.ZipEntrySpec;
 import com.dimasukimas.cloudstorage.service.ResourceManagerService;
 import com.dimasukimas.cloudstorage.service.ResourceType;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +18,11 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.function.Supplier;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -76,5 +85,40 @@ public class ResourceControllerTest {
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
     }
+
+    @Test
+    @WithCustomUser
+    @DisplayName("200 with content-length when download file")
+    void downloadFile_shouldReturnOkWithContentLength() throws Exception {
+        Supplier<InputStream> content = () -> new ByteArrayInputStream("test".getBytes());
+        ResourceInfoDto metadata = new ResourceInfoDto("folder1/test.txt", "test.txt", 4L, ResourceType.FILE);
+        ContentSource contentSource = new ObjectContentSource(content, metadata);
+
+        when(resourceManagerService.download(anyLong(), anyString())).thenReturn(contentSource);
+
+        mockMvc.perform(get("/resource/download").param("path", "folder1/test.txt"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/octet-stream"))
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"test.txt\"; filename*=UTF-8''test.txt"))
+                .andExpect(header().string("Content-Length", String.valueOf(4)));
+    }
+
+    @Test
+    @WithCustomUser
+    @DisplayName("200 without content-length when download directory")
+    void downloadDirectory_shouldReturnOkWithoutContentLength() throws Exception {
+        Supplier<InputStream> content = () -> new ByteArrayInputStream("test".getBytes());
+        ZipEntrySpec zipEntrySpec = new ZipEntrySpec("test.txt", null, ResourceType.FILE, content);
+        ContentSource contentSource = new ZipContentSource("folder1", List.of(zipEntrySpec));
+
+        when(resourceManagerService.download(anyLong(), anyString())).thenReturn(contentSource);
+
+        mockMvc.perform(get("/resource/download").param("path", "folder1/"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/octet-stream"))
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"folder1.zip\"; filename*=UTF-8''folder1.zip"))
+                .andExpect(header().doesNotExist("Content-Length"));
+    }
+
 
 }
