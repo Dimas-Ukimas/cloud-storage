@@ -4,7 +4,7 @@ import com.dimasukimas.cloudstorage.annotation.IntegrationTest;
 import com.dimasukimas.cloudstorage.config.container.MinioContainerInitializer;
 import com.dimasukimas.cloudstorage.config.container.PostgresContainerInitializer;
 import com.dimasukimas.cloudstorage.config.container.RedisContainerInitializer;
-import com.dimasukimas.cloudstorage.dto.UsernameDto;
+import com.dimasukimas.cloudstorage.dto.UsernameRequestDto;
 import com.dimasukimas.cloudstorage.exception.handler.ErrorResponse;
 import com.dimasukimas.cloudstorage.helper.RedisTestHelper;
 import com.dimasukimas.cloudstorage.helper.RequestTestHelper;
@@ -58,10 +58,10 @@ public class SignInIT {
 
     @Test
     public void givenExistentUser_whenSignIn_thenAuthenticationSuccessful() throws Exception {
-        ResponseEntity<UsernameDto> response = testRestTemplate.postForEntity(
+        ResponseEntity<UsernameRequestDto> response = testRestTemplate.postForEntity(
                 "/auth/sign-in",
                 requestHelper.authRequest(USERNAME, PASSWORD),
-                UsernameDto.class);
+                UsernameRequestDto.class);
 
         AuthAssert.create(
                         RedisAssert.create(redisHelper),

@@ -1,6 +1,6 @@
-package com.dimasukimas.cloudstorage.swagger;
+package com.dimasukimas.cloudstorage.swagger.auth;
 
-import com.dimasukimas.cloudstorage.dto.UsernameDto;
+import com.dimasukimas.cloudstorage.dto.UsernameRequestDto;
 import com.dimasukimas.cloudstorage.exception.handler.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,7 +16,7 @@ import java.lang.annotation.*;
 @Operation(summary = "Get username of authorized user")
 @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Username successfully retrieved",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsernameDto.class))
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsernameRequestDto.class))
         ),
         @ApiResponse(responseCode = "401", description = "Unable to get unauthorized user",
                 content = @Content(mediaType = "application/json", contentSchema = @Schema(implementation = ErrorResponse.class))

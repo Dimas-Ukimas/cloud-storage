@@ -25,11 +25,6 @@ public class RequestTestHelper {
         }
     }
 
-    //TODO: удоли
-    public HttpEntity<String> directoryCreationRequest(String request){
-            return new HttpEntity<>(request);
-    }
-
     private HttpHeaders createJsonHeader(){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

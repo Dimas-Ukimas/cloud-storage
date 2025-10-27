@@ -2,8 +2,14 @@ server:
   port: 8080
   servlet:
     context-path: /api
+  tomcat:
+    max-swallow-size: 20MB
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
   application:
     name: cloud-storage
@@ -37,6 +43,7 @@ spring:
     user-root-directory-pattern: "user-%d-files/"
     user-root-directory-regex: "^user-\\d+-files/"
     file-max-size: 100MB
+    max-path-size: 100
 
   minio:
     url: ${MINIO_URL}

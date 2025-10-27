@@ -2,7 +2,7 @@ package com.dimasukimas.cloudstorage.unit.controller;
 
 
 import com.dimasukimas.cloudstorage.controller.UserController;
-import com.dimasukimas.cloudstorage.dto.UsernameDto;
+import com.dimasukimas.cloudstorage.dto.UsernameRequestDto;
 import com.dimasukimas.cloudstorage.exception.handler.GlobalExceptionHandler;
 import com.dimasukimas.cloudstorage.mapper.UserMapper;
 import org.junit.jupiter.api.Test;
@@ -42,10 +42,10 @@ public class UserControllerTest {
     @Test
     @WithMockUser
     void getCurrentUser_shouldReturnUsernameWithOk() throws Exception {
-        UsernameDto usernameDto = new UsernameDto("user");
+        UsernameRequestDto usernameRequestDto = new UsernameRequestDto("user");
 
         when(userMapper.toUserDto(any(UserDetails.class)))
-                .thenReturn(usernameDto);
+                .thenReturn(usernameRequestDto);
 
         mockMvc.perform(get("/user/me"))
                 .andExpect(status().isOk())

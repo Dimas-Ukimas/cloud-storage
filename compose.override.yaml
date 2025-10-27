@@ -15,6 +15,12 @@ services:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password
 
+
+  frontend:
+    image: dimasukimas/cloud-frontend-test:v1.2.0
+    ports:
+      - "80:80"
+
   app:
     build:
       context: .

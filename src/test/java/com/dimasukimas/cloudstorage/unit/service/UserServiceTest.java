@@ -1,12 +1,12 @@
 package com.dimasukimas.cloudstorage.unit.service;
 
 import com.dimasukimas.cloudstorage.dto.AuthRequestDto;
-import com.dimasukimas.cloudstorage.dto.CustomUserDetails;
 import com.dimasukimas.cloudstorage.exception.UsernameAlreadyExistsException;
 import com.dimasukimas.cloudstorage.mapper.UserMapper;
 import com.dimasukimas.cloudstorage.model.Role;
 import com.dimasukimas.cloudstorage.model.User;
 import com.dimasukimas.cloudstorage.repository.UserRepository;
+import com.dimasukimas.cloudstorage.security.CustomUserDetails;
 import com.dimasukimas.cloudstorage.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

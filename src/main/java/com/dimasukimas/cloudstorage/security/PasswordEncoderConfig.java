@@ -1,4 +1,4 @@
-package com.dimasukimas.cloudstorage.config;
+package com.dimasukimas.cloudstorage.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

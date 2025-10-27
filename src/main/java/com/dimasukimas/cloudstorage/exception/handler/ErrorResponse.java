@@ -1,4 +1,10 @@
 package com.dimasukimas.cloudstorage.exception.handler;
 
-public record ErrorResponse(String message) {
+import io.swagger.v3.oas.annotations.media.Schema;
+
+public record ErrorResponse(
+
+        @Schema(description = "Error message", example = "Resource does not exist")
+        String message
+) {
 }

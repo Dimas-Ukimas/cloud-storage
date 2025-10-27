@@ -29,9 +29,12 @@ public class PathService {
         return path.length() - rootPath.length() > 0 ? path.substring(rootPath.length()) : extractResourceName(path);
     }
 
-    //TODO проверить, нужно ли возвращать имена папок с / на конце для фронта
+    public String extractPathWithoutPrefix(String path, String prefix) {
+        return path.length() == prefix.length() ? "" : path.substring(prefix.length());
+    }
+
     public String extractResourceName(String path) {
-        int lastSplitterIndex = isDir(path)
+        int lastSplitterIndex = path.endsWith(storageProperties.getDirectorySplitter())
                 ? truncateEndSplitterIfPresent(path).lastIndexOf(storageProperties.getDirectorySplitter())
                 : path.lastIndexOf(storageProperties.getDirectorySplitter());
 
@@ -41,7 +44,6 @@ public class PathService {
     }
 
     public List<String> extractSubdirectories(String path) {
-        checkIsPathExist(path);
         int lastSplitterIndex = path.lastIndexOf(storageProperties.getDirectorySplitter());
         boolean hasSubdirectories = lastSplitterIndex > -1;
 
@@ -67,12 +69,12 @@ public class PathService {
     }
 
     public String truncateEndSplitterIfPresent(String path) {
-        return isDir(path)
+        return path.endsWith(storageProperties.getDirectorySplitter())
                 ? path.substring(0, path.length() - 1)
                 : path;
     }
 
-    private String truncateRootDirectory(String path) {
+    public String truncateRootDirectory(String path) {
         return path.replaceFirst(storageProperties.getUserRootDirectoryRegex(), "");
     }
 
@@ -82,19 +84,14 @@ public class PathService {
         return lastSplitterIndex == -1 ? "" : path.substring(0, lastSplitterIndex) + storageProperties.getDirectorySplitter();
     }
 
-    //TODO: написать кастомное исключение
-    private void checkIsPathExist(String path) {
-        if (path == null || path.isBlank()) {
-            throw new RuntimeException("Path is not exist");
-        }
-    }
-
-    public boolean isDir(String path) {
-        return path.endsWith(storageProperties.getDirectorySplitter());
-    }
-
     public String addRootDirBefore(Long userId, String path) {
-        return String.format(storageProperties.getUserRootDirectoryPattern(), userId) + path;
+        String rootDirectory = String.format(storageProperties.getUserRootDirectoryPattern(), userId);
+
+        return rootDirectory + path;
+    }
+
+    public String addSplitterToEnd(String path) {
+        return path + storageProperties.getDirectorySplitter();
     }
 
 }

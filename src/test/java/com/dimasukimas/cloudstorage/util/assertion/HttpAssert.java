@@ -1,7 +1,7 @@
 package com.dimasukimas.cloudstorage.util.assertion;
 
-import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
-import com.dimasukimas.cloudstorage.dto.UsernameDto;
+import com.dimasukimas.cloudstorage.dto.ResourceInfoResponseDto;
+import com.dimasukimas.cloudstorage.dto.UsernameRequestDto;
 import com.dimasukimas.cloudstorage.exception.handler.ErrorResponse;
 import com.dimasukimas.cloudstorage.service.ResourceType;
 import org.springframework.http.HttpHeaders;
@@ -41,12 +41,11 @@ public class HttpAssert<T> {
     public HttpAssert assertBodyContainsUsername(String username) {
         Object body = getBody().orElseThrow(() -> new NullPointerException("Body is null"));
 
-        assertThat(body).isInstanceOf(UsernameDto.class);
-        assertThat(((UsernameDto) body).username()).contains(username);
+        assertThat(body).isInstanceOf(UsernameRequestDto.class);
+        assertThat(((UsernameRequestDto) body).username()).contains(username);
         return this;
     }
 
-    //TODO переписать метод
     public HttpAssert assertSetCookieHeader() {
         List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
 
@@ -73,9 +72,18 @@ public class HttpAssert<T> {
         return this;
     }
 
+    public HttpAssert assertNewPathIsCorrect(String expectedPath) {
+        assertThat(bodyAsStream(ResourceInfoResponseDto.class)
+                .map(ResourceInfoResponseDto::path)
+                .filter(path -> path.equals(expectedPath))
+                .findAny())
+                .isPresent();
+        return this;
+    }
+
     public HttpAssert assertBodyContainsResourceName(String expectedName) {
-        assertThat(bodyAsStream(ResourceInfoDto.class)
-                .map(ResourceInfoDto::name)
+        assertThat(bodyAsStream(ResourceInfoResponseDto.class)
+                .map(ResourceInfoResponseDto::name)
                 .filter(resource -> resource.equals(expectedName))
                 .findAny())
                 .isPresent();
@@ -83,8 +91,8 @@ public class HttpAssert<T> {
     }
 
     public HttpAssert assertResourceType(ResourceType type) {
-        assertThat(bodyAsStream(ResourceInfoDto.class)
-                .map(ResourceInfoDto::type)
+        assertThat(bodyAsStream(ResourceInfoResponseDto.class)
+                .map(ResourceInfoResponseDto::type)
                 .equals(type.toString()));
 
         return this;

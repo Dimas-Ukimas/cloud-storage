@@ -1,4 +1,4 @@
-package com.dimasukimas.cloudstorage.dto;
+package com.dimasukimas.cloudstorage.security;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

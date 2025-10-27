@@ -2,12 +2,12 @@ package com.dimasukimas.cloudstorage.service;
 
 import com.dimasukimas.cloudstorage.config.event.UserRegisteredEvent;
 import com.dimasukimas.cloudstorage.dto.AuthRequestDto;
-import com.dimasukimas.cloudstorage.dto.CustomUserDetails;
 import com.dimasukimas.cloudstorage.exception.UsernameAlreadyExistsException;
 import com.dimasukimas.cloudstorage.mapper.UserMapper;
 import com.dimasukimas.cloudstorage.model.Role;
 import com.dimasukimas.cloudstorage.model.User;
 import com.dimasukimas.cloudstorage.repository.UserRepository;
+import com.dimasukimas.cloudstorage.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;

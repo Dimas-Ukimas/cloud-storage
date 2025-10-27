@@ -1,6 +1,6 @@
 package com.dimasukimas.cloudstorage.config.security;
 
-import com.dimasukimas.cloudstorage.dto.CustomUserDetails;
+import com.dimasukimas.cloudstorage.security.CustomUserDetails;
 import com.dimasukimas.cloudstorage.service.UserService;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;

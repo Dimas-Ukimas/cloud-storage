@@ -1,9 +1,9 @@
 package com.dimasukimas.cloudstorage.mapper;
 
-import com.dimasukimas.cloudstorage.dto.CustomUserDetails;
-import com.dimasukimas.cloudstorage.dto.UsernameDto;
+import com.dimasukimas.cloudstorage.dto.UsernameRequestDto;
 import com.dimasukimas.cloudstorage.model.Role;
 import com.dimasukimas.cloudstorage.model.User;
+import com.dimasukimas.cloudstorage.security.CustomUserDetails;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,5 +23,5 @@ public interface UserMapper {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
-    UsernameDto toUserDto(UserDetails user);
+    UsernameRequestDto toUserDto(UserDetails user);
 }

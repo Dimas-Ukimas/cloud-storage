@@ -12,7 +12,7 @@ services:
       - "${DB_PORT:-5432}"
 
   frontend:
-    image: dimasukimas/cloud-frontend-test:latest
+    image: dimasukimas/cloud-frontend-test:v1.2.0
     ports:
       - "80:80"
 

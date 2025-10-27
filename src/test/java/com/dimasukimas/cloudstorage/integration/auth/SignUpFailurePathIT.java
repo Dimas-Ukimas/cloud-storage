@@ -77,7 +77,7 @@ public class SignUpFailurePathIT {
 
     @Test
     public void givenUnsuccessfulDirectoryCreation_whenSignUp_thenRegistrationFailed() {
-        doThrow(new MinioOperationException("Cannot create directory")).when(minioRepository).createDirectory(anyString());
+        doThrow(new MinioOperationException("Cannot create directory")).when(minioRepository).putEmptyObject(anyString());
 
         assertThrows(MinioOperationException.class, () -> {
             userService.signUp(new AuthRequestDto(USERNAME, PASSWORD));

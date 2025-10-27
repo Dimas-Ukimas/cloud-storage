@@ -1,7 +1,7 @@
 package com.dimasukimas.cloudstorage.mapper;
 
-import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
-import com.dimasukimas.cloudstorage.repository.ResourceMetadata;
+import com.dimasukimas.cloudstorage.dto.ResourceInfoResponseDto;
+import com.dimasukimas.cloudstorage.repository.StorageObjectInfo;
 import com.dimasukimas.cloudstorage.repository.ZipEntrySpec;
 import com.dimasukimas.cloudstorage.service.PathService;
 import com.dimasukimas.cloudstorage.service.ResourceType;
@@ -18,15 +18,14 @@ public abstract class ResourceInfoMapper {
     @Autowired
     protected PathService pathService;
 
-    @Mapping(target = "path", expression = "java(pathService.extractRootlessPathToResource(resourceMetadata.path()))")
-    @Mapping(target = "name", expression = "java(pathService.extractResourceName(resourceMetadata.path()))")
-    @Mapping(target = "size", expression = "java(resourceMetadata.size())")
-    @Mapping(target = "type", expression = "java(resourceMetadata.isDir() ? ResourceType.DIRECTORY : ResourceType.FILE)")
-    public abstract ResourceInfoDto toResDto(ResourceMetadata resourceMetadata);
+    @Mapping(target = "path", expression = "java(pathService.extractRootlessPathToResource(storageObjectInfo.key()))")
+    @Mapping(target = "name", expression = "java(pathService.extractResourceName(storageObjectInfo.key()))")
+    @Mapping(target = "size", expression = "java(ResourceType.DIRECTORY.equals(type) ? null : storageObjectInfo.size())")
+    public abstract ResourceInfoResponseDto toResDto(StorageObjectInfo storageObjectInfo, ResourceType type);
 
-    @Mapping(target = "relativePath", expression = "java(pathService.extractRelativePath(resourceMetadata.path(), rootPath))")
-    @Mapping(target = "size", expression = "java(resourceMetadata.size())")
-    @Mapping(target = "type", expression = "java(resourceMetadata.isDir() ? ResourceType.DIRECTORY : ResourceType.FILE)")
-    public abstract ZipEntrySpec toZipEntrySpec(ResourceMetadata resourceMetadata, String rootPath, Supplier<InputStream> content);
+    @Mapping(target = "relativePath", expression = "java(pathService.extractRelativePath(storageObjectInfo.key(), rootPath))")
+    @Mapping(target = "size", expression = "java(ResourceType.DIRECTORY.equals(type) ? null : storageObjectInfo.size())")
+    public abstract ZipEntrySpec toZipEntrySpec(StorageObjectInfo storageObjectInfo, String rootPath, Supplier<InputStream> content, ResourceType type);
+
 
 }

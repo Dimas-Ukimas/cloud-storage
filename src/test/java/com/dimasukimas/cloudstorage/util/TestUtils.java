@@ -22,7 +22,7 @@ public class TestUtils {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", file);
+        body.add("object", file);
 
         return new HttpEntity<>(body, headers);
     }

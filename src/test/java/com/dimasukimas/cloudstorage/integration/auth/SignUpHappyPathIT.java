@@ -5,7 +5,7 @@ import com.dimasukimas.cloudstorage.annotation.IntegrationTest;
 import com.dimasukimas.cloudstorage.config.container.MinioContainerInitializer;
 import com.dimasukimas.cloudstorage.config.container.PostgresContainerInitializer;
 import com.dimasukimas.cloudstorage.config.container.RedisContainerInitializer;
-import com.dimasukimas.cloudstorage.dto.UsernameDto;
+import com.dimasukimas.cloudstorage.dto.UsernameRequestDto;
 import com.dimasukimas.cloudstorage.helper.MinioTestHelper;
 import com.dimasukimas.cloudstorage.helper.RedisTestHelper;
 import com.dimasukimas.cloudstorage.helper.RequestTestHelper;
@@ -59,10 +59,10 @@ public class SignUpHappyPathIT {
 
     @Test
     public void givenValidUserData_whenSignUp_thenSuccessful() throws Exception {
-        ResponseEntity<UsernameDto> response = testRestTemplate.postForEntity(
+        ResponseEntity<UsernameRequestDto> response = testRestTemplate.postForEntity(
                 SIGN_UP_URL,
                 requestHelper.authRequest(USERNAME, PASSWORD),
-                UsernameDto.class);
+                UsernameRequestDto.class);
 
         MinioAuthAssert.create(
                         RedisAssert.create(redisHelper),

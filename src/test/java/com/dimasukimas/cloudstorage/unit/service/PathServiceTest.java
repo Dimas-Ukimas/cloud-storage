@@ -26,32 +26,6 @@ public class PathServiceTest {
     @Autowired
     private StorageProperties storageProperties;
 
-    @ParameterizedTest
-    @MethodSource("cases")
-    void extractSubdirectoriesFromResourcePath_shouldReturnAllSubdirectories(String path, List<String> expected) throws Exception {
-        List<String> subdirectories = pathService.extractSubdirectories(path);
-
-        assertThat(subdirectories).containsExactlyElementsOf(expected);
-    }
-
-    @ParameterizedTest
-    @MethodSource("pathCases")
-    void extractPathToResource_shouldReturnCorrectPathWithoutRoot(String path, String expected) throws Exception {
-        String pathToResource = pathService.extractRootlessPathToResource(path);
-
-        assertThat(pathToResource).isEqualTo(expected);
-    }
-
-    @ParameterizedTest
-    @MethodSource("relativePathCases")
-    void extractRelativePathToResource_shouldReturnCorrectPath(String path, String rootPath, String expected) throws Exception {
-        String relativePath = pathService.extractRelativePath(path, rootPath);
-
-        assertThat(relativePath).isEqualTo(expected);
-    }
-
-
-
     static Stream<Arguments> cases() {
         return Stream.of(
                 Arguments.of("folder1/folder2/folder3/test.txt",
@@ -81,5 +55,31 @@ public class PathServiceTest {
                 Arguments.of("folder1/test.txt", "folder1/",
                         "test.txt"));
     }
+
+    @ParameterizedTest
+    @MethodSource("cases")
+    void extractSubdirectoriesFromResourcePath_shouldReturnAllSubdirectories(String path, List<String> expected) throws Exception {
+        List<String> subdirectories = pathService.extractSubdirectories(path);
+
+        assertThat(subdirectories).containsExactlyElementsOf(expected);
+    }
+
+    @ParameterizedTest
+    @MethodSource("pathCases")
+    void extractPathToResource_shouldReturnCorrectPathWithoutRoot(String path, String expected) throws Exception {
+        String pathToResource = pathService.extractRootlessPathToResource(path);
+
+        assertThat(pathToResource).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @MethodSource("relativePathCases")
+    void extractRelativePathToResource_shouldReturnCorrectPath(String path, String rootPath, String expected) throws Exception {
+        String relativePath = pathService.extractRelativePath(path, rootPath);
+
+        assertThat(relativePath).isEqualTo(expected);
+    }
+
+
 
 }

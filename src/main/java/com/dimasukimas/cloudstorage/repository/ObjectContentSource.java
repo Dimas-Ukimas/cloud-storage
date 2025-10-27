@@ -1,6 +1,6 @@
 package com.dimasukimas.cloudstorage.repository;
 
-import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
+import com.dimasukimas.cloudstorage.dto.ResourceInfoResponseDto;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 public class ObjectContentSource implements ContentSource {
 
     private final Supplier<InputStream> contentSource;
-    private final ResourceInfoDto metadata;
+    private final ResourceInfoResponseDto metadata;
     AtomicBoolean isUsed = new AtomicBoolean(false);
 
     @Override

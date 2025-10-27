@@ -1,6 +1,6 @@
 package com.dimasukimas.cloudstorage.config.security;
 
-import com.dimasukimas.cloudstorage.dto.CustomUserDetails;
+import com.dimasukimas.cloudstorage.security.CustomUserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

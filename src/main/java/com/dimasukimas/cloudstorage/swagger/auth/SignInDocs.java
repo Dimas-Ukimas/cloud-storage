@@ -1,7 +1,7 @@
-package com.dimasukimas.cloudstorage.swagger;
+package com.dimasukimas.cloudstorage.swagger.auth;
 
 import com.dimasukimas.cloudstorage.dto.AuthRequestDto;
-import com.dimasukimas.cloudstorage.dto.UsernameDto;
+import com.dimasukimas.cloudstorage.dto.UsernameRequestDto;
 import com.dimasukimas.cloudstorage.exception.handler.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,7 +22,7 @@ import java.lang.annotation.*;
 )
 @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User successfully authorized",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsernameDto.class))
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsernameRequestDto.class))
         ),
         @ApiResponse(responseCode = "400", description = "Authorization failed due to validation error",
                 content = @Content(mediaType = "application/json", contentSchema = @Schema(implementation = ErrorResponse.class))

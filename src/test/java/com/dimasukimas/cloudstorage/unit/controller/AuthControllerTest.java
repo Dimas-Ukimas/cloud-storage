@@ -2,8 +2,8 @@ package com.dimasukimas.cloudstorage.unit.controller;
 
 import com.dimasukimas.cloudstorage.controller.AuthController;
 import com.dimasukimas.cloudstorage.dto.AuthRequestDto;
-import com.dimasukimas.cloudstorage.dto.CustomUserDetails;
 import com.dimasukimas.cloudstorage.exception.handler.GlobalExceptionHandler;
+import com.dimasukimas.cloudstorage.security.CustomUserDetails;
 import com.dimasukimas.cloudstorage.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -6,22 +6,24 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public interface StorageRepository {
-    ResourceMetadata createDirectory(String path);
+    StorageObjectInfo putEmptyObject(String objectKey);
 
-    boolean isResourceExists(String path);
+    boolean isObjectExists(String objectKey);
 
-    List<ResourceMetadata> getDirectoryContentInfo(String path);
+    List<StorageObjectInfo> listChildren(String prefix);
 
-    Optional<ResourceMetadata> findResource(String path);
+    Optional<StorageObjectInfo> findObject(String objectKey);
 
-    List<ResourceMetadata> listAll(String path);
+    List<StorageObjectInfo> listRecursive(String prefix);
 
-    ResourceMetadata upload(String path, InputStream inputStream, long size);
+    StorageObjectInfo putObject(String objectKey, InputStream inputStream, long size);
 
-    void deleteDirectory(String path);
+    void removeObjects(String prefix);
 
-    void deleteFile(String path);
+    void removeObject(String objectKey);
 
-    Supplier<InputStream> download(String path);
+    Supplier<InputStream> getObjectStream(String objectKey);
+
+    StorageObjectInfo copyObject(String sourceKey, String targetKey);
 
 }

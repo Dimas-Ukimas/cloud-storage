@@ -2,12 +2,12 @@ package com.dimasukimas.cloudstorage.unit.controller;
 
 import com.dimasukimas.cloudstorage.config.security.WithCustomUser;
 import com.dimasukimas.cloudstorage.controller.ResourceController;
-import com.dimasukimas.cloudstorage.dto.ResourceInfoDto;
+import com.dimasukimas.cloudstorage.dto.ResourceInfoResponseDto;
 import com.dimasukimas.cloudstorage.repository.ContentSource;
 import com.dimasukimas.cloudstorage.repository.ObjectContentSource;
 import com.dimasukimas.cloudstorage.repository.ZipContentSource;
 import com.dimasukimas.cloudstorage.repository.ZipEntrySpec;
-import com.dimasukimas.cloudstorage.service.ResourceManagerService;
+import com.dimasukimas.cloudstorage.service.ResourceService;
 import com.dimasukimas.cloudstorage.service.ResourceType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ResourceControllerTest {
 
     @MockitoBean
-    private ResourceManagerService resourceManagerService;
+    private ResourceService resourceService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -44,9 +44,9 @@ public class ResourceControllerTest {
     @Test
     @WithCustomUser
     void getResourceInfo_shouldReturnResourceInfo() throws Exception {
-        var resInfo = new ResourceInfoDto("folder1/", "folder2/", null, ResourceType.DIRECTORY);
+        var resInfo = new ResourceInfoResponseDto("folder1/", "folder2/", null, ResourceType.DIRECTORY);
 
-        when(resourceManagerService.getResourceInfo(1L, "folder2/")).thenReturn(resInfo);
+        when(resourceService.getResourceInfo(1L, "folder2/")).thenReturn(resInfo);
 
         mockMvc.perform(get("/resource").param("path", "folder2/"))
                 .andExpect(status().isOk())
@@ -60,9 +60,9 @@ public class ResourceControllerTest {
     void uploadFile_shouldReturnResourceInfo() throws Exception {
         byte[] bytes = "test".getBytes();
         var file = new MockMultipartFile("file", "test.txt", "text/plain", bytes);
-        var resInfo = new ResourceInfoDto("folder1/", "test.txt", file.getSize(), ResourceType.FILE);
+        var resInfo = new ResourceInfoResponseDto("folder1/", "test.txt", file.getSize(), ResourceType.FILE);
 
-        when(resourceManagerService.upload(1L, "folder1/", file)).thenReturn(resInfo);
+        when(resourceService.upload(1L, "folder1/", List.of(file))).thenReturn(List.of(resInfo));
 
         mockMvc.perform(multipart("/resource")
                         .file(file)
@@ -79,7 +79,7 @@ public class ResourceControllerTest {
     @WithCustomUser
     @DisplayName("204 when delete file")
     void deleteResource_shouldReturnNoContent() throws Exception {
-        doNothing().when(resourceManagerService).delete(anyLong(), anyString());
+        doNothing().when(resourceService).delete(anyLong(), anyString());
 
         mockMvc.perform(delete("/resource").param("path", "folder1/"))
                 .andExpect(status().isNoContent())
@@ -91,10 +91,10 @@ public class ResourceControllerTest {
     @DisplayName("200 with content-length when download file")
     void downloadFile_shouldReturnOkWithContentLength() throws Exception {
         Supplier<InputStream> content = () -> new ByteArrayInputStream("test".getBytes());
-        ResourceInfoDto metadata = new ResourceInfoDto("folder1/test.txt", "test.txt", 4L, ResourceType.FILE);
+        ResourceInfoResponseDto metadata = new ResourceInfoResponseDto("folder1/test.txt", "test.txt", 4L, ResourceType.FILE);
         ContentSource contentSource = new ObjectContentSource(content, metadata);
 
-        when(resourceManagerService.download(anyLong(), anyString())).thenReturn(contentSource);
+        when(resourceService.download(anyLong(), anyString())).thenReturn(contentSource);
 
         mockMvc.perform(get("/resource/download").param("path", "folder1/test.txt"))
                 .andExpect(status().isOk())
@@ -111,13 +111,45 @@ public class ResourceControllerTest {
         ZipEntrySpec zipEntrySpec = new ZipEntrySpec("test.txt", null, ResourceType.FILE, content);
         ContentSource contentSource = new ZipContentSource("folder1", List.of(zipEntrySpec));
 
-        when(resourceManagerService.download(anyLong(), anyString())).thenReturn(contentSource);
+        when(resourceService.download(anyLong(), anyString())).thenReturn(contentSource);
 
         mockMvc.perform(get("/resource/download").param("path", "folder1/"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "application/octet-stream"))
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"folder1.zip\"; filename*=UTF-8''folder1.zip"))
                 .andExpect(header().doesNotExist("Content-Length"));
+    }
+
+    @Test
+    @WithCustomUser
+    @DisplayName("200 with resource metadata when move")
+    void moveResource_shouldReturnOkWithoutMetadata() throws Exception {
+        var movedResInfo = new ResourceInfoResponseDto("folder1/folder3/", "test.txt", 7L, ResourceType.FILE);
+
+        when(resourceService.moveOrRename(anyLong(), anyString(), anyString())).thenReturn(movedResInfo);
+
+        mockMvc.perform(get("/resource/move").param("from", "folder1/").param("to", "folder3/"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.path").value("folder1/folder3/"))
+                .andExpect(jsonPath("$.name").value("test.txt"))
+                .andExpect(jsonPath("$.size").value(movedResInfo.size()))
+                .andExpect(jsonPath("$.type").value(movedResInfo.type().name()));
+    }
+
+    @Test
+    @WithCustomUser
+    @DisplayName("200 without content-length when download directory")
+    void searchResource_shouldReturnOk() throws Exception {
+        var searchingResInfo = new ResourceInfoResponseDto("folder1/folder3/", "test.txt", 7L, ResourceType.FILE);
+
+        when(resourceService.search(anyLong(), anyString())).thenReturn(List.of(searchingResInfo));
+
+        mockMvc.perform(get("/resource/move").param("from", "folder1/").param("to", "folder3/"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.path").value("folder1/folder3/"))
+                .andExpect(jsonPath("$.name").value("test.txt"))
+                .andExpect(jsonPath("$.size").value(searchingResInfo.size()))
+                .andExpect(jsonPath("$.type").value(searchingResInfo.type().name()));
     }
 
 

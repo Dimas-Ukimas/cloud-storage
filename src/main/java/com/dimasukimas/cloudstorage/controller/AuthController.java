@@ -1,13 +1,13 @@
 package com.dimasukimas.cloudstorage.controller;
 
 import com.dimasukimas.cloudstorage.dto.AuthRequestDto;
-import com.dimasukimas.cloudstorage.dto.UsernameDto;
-import com.dimasukimas.cloudstorage.dto.CustomUserDetails;
+import com.dimasukimas.cloudstorage.dto.UsernameRequestDto;
 import com.dimasukimas.cloudstorage.exception.UnauthorizedUserException;
+import com.dimasukimas.cloudstorage.security.CustomUserDetails;
 import com.dimasukimas.cloudstorage.service.UserService;
-import com.dimasukimas.cloudstorage.swagger.SignInDocs;
-import com.dimasukimas.cloudstorage.swagger.SignOutDocs;
-import com.dimasukimas.cloudstorage.swagger.SignUpDocs;
+import com.dimasukimas.cloudstorage.swagger.auth.SignInDocs;
+import com.dimasukimas.cloudstorage.swagger.auth.SignOutDocs;
+import com.dimasukimas.cloudstorage.swagger.auth.SignUpDocs;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,7 +32,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authorization", description = "Authorization operations")
+@Tag(name = "Authorization")
 public class AuthController {
 
     private final UserService userService;
@@ -40,7 +40,7 @@ public class AuthController {
 
     @PostMapping("/sign-up")
     @SignUpDocs
-    public ResponseEntity<UsernameDto> signUp(@Valid @RequestBody AuthRequestDto dto, HttpServletRequest request) {
+    public ResponseEntity<UsernameRequestDto> signUp(@Valid @RequestBody AuthRequestDto dto, HttpServletRequest request) {
         CustomUserDetails registeredUser = userService.signUp(dto);
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(
@@ -51,7 +51,7 @@ public class AuthController {
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
         request.getSession(true);
-        UsernameDto response = new UsernameDto(registeredUser.getUsername());
+        UsernameRequestDto response = new UsernameRequestDto(registeredUser.getUsername());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -60,13 +60,13 @@ public class AuthController {
 
     @PostMapping("/sign-in")
     @SignInDocs
-    public ResponseEntity<UsernameDto> signIn(@Valid @RequestBody AuthRequestDto dto, HttpServletRequest request) {
+    public ResponseEntity<UsernameRequestDto> signIn(@Valid @RequestBody AuthRequestDto dto, HttpServletRequest request) {
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(dto.username(), dto.password());
         Authentication authResult = authenticationManager.authenticate(authRequest);
 
         SecurityContextHolder.getContext().setAuthentication(authResult);
         CustomUserDetails userDetails = (CustomUserDetails) authResult.getPrincipal();
-        UsernameDto response = new UsernameDto(userDetails.getUsername());
+        UsernameRequestDto response = new UsernameRequestDto(userDetails.getUsername());
         request.getSession(true);
 
         return ResponseEntity

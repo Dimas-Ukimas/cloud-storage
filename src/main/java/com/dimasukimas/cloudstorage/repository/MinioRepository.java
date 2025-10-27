@@ -29,14 +29,14 @@ public class MinioRepository implements StorageRepository {
     private final ObjectInfoMapper mapper;
 
     @Override
-    public ResourceMetadata createDirectory(String prefix) {
+    public StorageObjectInfo putEmptyObject(String objectKey) {
 
         ObjectWriteResponse object;
         try {
             object = minioClient.putObject(PutObjectArgs
                     .builder()
                     .bucket(minioProperties.getBucketName())
-                    .object(prefix)
+                    .object(objectKey)
                     .stream(new ByteArrayInputStream(new byte[0]), 0, -1)
                     .build());
         } catch (Exception e) {
@@ -47,36 +47,36 @@ public class MinioRepository implements StorageRepository {
     }
 
     @Override
-    public List<ResourceMetadata> getDirectoryContentInfo(String prefix) {
+    public List<StorageObjectInfo> listChildren(String prefix) {
         Iterable<Result<Item>> results = findDirectObjects(prefix);
 
-        List<ResourceMetadata> contentInfo = new ArrayList<>();
+        List<StorageObjectInfo> objects = new ArrayList<>();
         for (Result<Item> result : results) {
             try {
                 Item item = result.get();
 
-                boolean isCurrentDirectory = item.objectName().equals(prefix);
+                boolean isParentObject = item.objectName().equals(prefix);
 
-                if (isCurrentDirectory) {
+                if (isParentObject) {
                     continue;
                 }
-                contentInfo.add(mapper.toMetadata(item));
+                objects.add(mapper.toMetadata(item));
 
             } catch (Exception e) {
                 throw new MinioOperationException("Something went wrong, please, try again later", e);
             }
         }
 
-        return contentInfo;
+        return objects;
     }
 
     @Override
-    public boolean isResourceExists(String prefix) {
-        return findResource(prefix).isPresent();
+    public boolean isObjectExists(String objectKey) {
+        return findObject(objectKey).isPresent();
     }
 
     @Override
-    public Optional<ResourceMetadata> findResource(String path) {
+    public Optional<StorageObjectInfo> findObject(String path) {
         StatObjectResponse object;
         try {
             object = minioClient.statObject(StatObjectArgs
@@ -98,13 +98,13 @@ public class MinioRepository implements StorageRepository {
     }
 
     @Override
-    public ResourceMetadata upload(String objectName, InputStream inputStream, long size) {
+    public StorageObjectInfo putObject(String objectKey, InputStream inputStream, long size) {
         ObjectWriteResponse object;
         try {
             object = minioClient.putObject(PutObjectArgs
                     .builder()
                     .bucket(minioProperties.getBucketName())
-                    .object(objectName)
+                    .object(objectKey)
                     .stream(inputStream, size, -1)
                     .build());
         } catch (Exception e) {
@@ -115,39 +115,47 @@ public class MinioRepository implements StorageRepository {
     }
 
     @Override
-    public void deleteDirectory(String prefix) {
-        Iterable<Result<Item>> objects = findAllObjects(prefix);
-        List<DeleteObject> deleteObjects = convertToDeleteObjects(objects);
-        removeObjects(deleteObjects);
-    }
-
-    @Override
-    public void deleteFile(String prefix) {
-        removeObject(prefix);
-    }
-
-    @Override
-    public Supplier<InputStream> download(String prefix) {
+    public Supplier<InputStream> getObjectStream(String objectKey) {
         return () -> {
-            InputStream content;
+            InputStream objectStream;
             try {
-                content = minioClient.getObject(GetObjectArgs
+                objectStream = minioClient.getObject(GetObjectArgs
                         .builder()
                         .bucket(minioProperties.getBucketName())
-                        .object(prefix)
+                        .object(objectKey)
                         .build());
             } catch (Exception e) {
                 throw new MinioOperationException("Something went wrong, please, try again later", e);
             }
-            return content;
+            return objectStream;
         };
     }
 
     @Override
-    public List<ResourceMetadata> listAll(String prefix) {
+    public StorageObjectInfo copyObject(String sourceKey, String targetKey) {
+        ObjectWriteResponse response;
+        try {
+            response = minioClient.copyObject(
+                    CopyObjectArgs.builder()
+                            .bucket(minioProperties.getBucketName())
+                            .object(targetKey)
+                            .source(
+                                    CopySource.builder()
+                                            .bucket(minioProperties.getBucketName())
+                                            .object(sourceKey)
+                                            .build())
+                            .build());
+        } catch (Exception e) {
+            throw new MinioOperationException("Something went wrong, please, try again later", e);
+        }
+        return mapper.toMetadata(response);
+    }
+
+    @Override
+    public List<StorageObjectInfo> listRecursive(String prefix) {
         Iterable<Result<Item>> results = findAllObjects(prefix);
 
-        List<ResourceMetadata> resources = new ArrayList<>();
+        List<StorageObjectInfo> resources = new ArrayList<>();
         for (Result<Item> result : results) {
             try {
                 Item item = result.get();
@@ -157,6 +165,45 @@ public class MinioRepository implements StorageRepository {
             }
         }
         return resources;
+    }
+
+    @Override
+    public void removeObjects(String prefix) {
+        Iterable<Result<Item>> objects = findAllObjects(prefix);
+        List<DeleteObject> deleteObjects = convertToDeleteObjects(objects);
+
+        try {
+            Iterable<Result<DeleteError>> deleteResults = minioClient.removeObjects(RemoveObjectsArgs
+                    .builder()
+                    .bucket(minioProperties.getBucketName())
+                    .objects(deleteObjects)
+                    .build());
+
+            StringBuilder errorMessage = new StringBuilder();
+            for (Result<DeleteError> result : deleteResults) {
+                DeleteError error = result.get();
+                errorMessage.append(error.objectName()).append("; ").append(error.message()).append(" ");
+            }
+            if (!errorMessage.isEmpty()) {
+                throw new MinioOperationException("Error in deleting objects: " + errorMessage);
+            }
+        } catch (
+                Exception e) {
+            throw new MinioOperationException("Something went wrong, please, try again later", e);
+        }
+    }
+
+    @Override
+    public void removeObject(String objectKey) {
+        try {
+            minioClient.removeObject(RemoveObjectArgs
+                    .builder()
+                    .bucket(minioProperties.getBucketName())
+                    .object(objectKey)
+                    .build());
+        } catch (Exception e) {
+            throw new MinioOperationException("Something went wrong, please, try again later", e);
+        }
     }
 
     private Iterable<Result<Item>> findAllObjects(String prefix) {
@@ -189,39 +236,5 @@ public class MinioRepository implements StorageRepository {
                     }
                 })
                 .toList();
-    }
-
-    private void removeObjects(List<DeleteObject> deleteObjects) {
-        try {
-            Iterable<Result<DeleteError>> deleteResults = minioClient.removeObjects(RemoveObjectsArgs
-                    .builder()
-                    .bucket(minioProperties.getBucketName())
-                    .objects(deleteObjects)
-                    .build());
-
-            StringBuilder errorMessage = new StringBuilder();
-            for (Result<DeleteError> result : deleteResults) {
-                DeleteError error = result.get();
-                errorMessage.append(error.objectName()).append("; ").append(error.message()).append(" ");
-            }
-            if (!errorMessage.isEmpty()) {
-                throw new MinioOperationException("Error in deleting objects: " + errorMessage);
-            }
-        } catch (
-                Exception e) {
-            throw new MinioOperationException("Something went wrong, please, try again later", e);
-        }
-    }
-
-    private void removeObject(String prefix) {
-        try {
-            minioClient.removeObject(RemoveObjectArgs
-                    .builder()
-                    .bucket(minioProperties.getBucketName())
-                    .object(prefix)
-                    .build());
-        } catch (Exception e) {
-            throw new MinioOperationException("Something went wrong, please, try again later", e);
-        }
     }
 }

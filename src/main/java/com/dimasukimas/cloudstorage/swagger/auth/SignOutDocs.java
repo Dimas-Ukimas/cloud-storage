@@ -1,4 +1,4 @@
-package com.dimasukimas.cloudstorage.swagger;
+package com.dimasukimas.cloudstorage.swagger.auth;
 
 import com.dimasukimas.cloudstorage.exception.handler.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;

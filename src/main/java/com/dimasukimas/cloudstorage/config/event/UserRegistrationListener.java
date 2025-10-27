@@ -17,7 +17,7 @@ public class UserRegistrationListener {
 @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void onUserRegisteredEvent(UserRegisteredEvent event){
 
-    repository.createDirectory(pathService.getUserRootDirectoryName(event.userId()));
+    repository.putEmptyObject(pathService.getUserRootDirectoryName(event.userId()));
 }
 
 }

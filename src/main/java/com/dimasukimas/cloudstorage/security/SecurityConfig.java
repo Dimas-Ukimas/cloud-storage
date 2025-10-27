@@ -1,4 +1,4 @@
-package com.dimasukimas.cloudstorage.config;
+package com.dimasukimas.cloudstorage.security;
 
 import com.dimasukimas.cloudstorage.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -34,11 +34,20 @@ public class SecurityConfig {
                 .securityContext(sc -> sc.requireExplicitSave(false))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS,"/**" ).permitAll()
-                        .requestMatchers("/auth/**",
+
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs",
                                 "/v3/api-docs/**",
-                                "/swagger-ui/**"
+                                "/v3/api-docs.yaml"
                         ).permitAll()
+
+                        .requestMatchers("/auth/**"
+                        ).permitAll()
+
                         .anyRequest().authenticated())
+                .httpBasic(Customizer.withDefaults())
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session
                         .maximumSessions(1))
