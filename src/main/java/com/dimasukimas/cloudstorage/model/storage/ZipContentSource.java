@@ -1,4 +1,4 @@
-package com.dimasukimas.cloudstorage.repository;
+package com.dimasukimas.cloudstorage.model.storage;
 
 import lombok.RequiredArgsConstructor;
 

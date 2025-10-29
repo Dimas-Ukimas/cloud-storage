@@ -1,4 +1,4 @@
-package com.dimasukimas.cloudstorage.repository;
+package com.dimasukimas.cloudstorage.model.storage;
 
 import com.dimasukimas.cloudstorage.service.ResourceType;
 
