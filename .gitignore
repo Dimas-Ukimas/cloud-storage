@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 .env.prod
 .dockerignore
+compose.override.yaml
 
 ### STS ###
 .apt_generated

@@ -34,3 +34,7 @@ spring:
 
 cors:
   allowedOrigin: http://localhost
+
+app:
+  security:
+    enabled: false

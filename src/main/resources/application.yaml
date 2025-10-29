@@ -43,12 +43,12 @@ spring:
     user-root-directory-pattern: "user-%d-files/"
     user-root-directory-regex: "^user-\\d+-files/"
     file-max-size: 100MB
-    max-path-size: 100
+    max-path-length: 100
 
   minio:
     url: ${MINIO_URL}
-    accessKey: ${MINIO_USER}
-    secretKey: ${MINIO_PASSWORD}
+    accessKey: ${MINIO_ROOT_USER}
+    secretKey: ${MINIO_ROOT_PASSWORD}
     bucket-name: user-files
 
 

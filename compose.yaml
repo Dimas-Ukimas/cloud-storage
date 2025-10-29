@@ -12,7 +12,7 @@ services:
       - "${DB_PORT:-5432}"
 
   frontend:
-    image: dimasukimas/cloud-frontend-test:v1.2.0
+    image: dimasukimas/cloud-frontend-prod:v1.0.0
     ports:
       - "80:80"
 
@@ -29,8 +29,8 @@ services:
     volumes:
       - minio-data:/data
     environment:
-      MINIO_USER: ${MINIO_USER}
-      MINIO_PASSWORD: ${MINIO_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
 
   app:
     build:
@@ -45,8 +45,8 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       MINIO_URL: ${MINIO_URL}
-      MINIO_USER: ${MINIO_USER}
-      MINIO_PASSWORD: ${MINIO_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
       - "8080:8080"
     depends_on:
