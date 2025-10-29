@@ -1,8 +1,8 @@
 package com.dimasukimas.cloudstorage.controller;
 
 import com.dimasukimas.cloudstorage.dto.ResourceInfoResponseDto;
-import com.dimasukimas.cloudstorage.repository.ArtifactType;
-import com.dimasukimas.cloudstorage.repository.ContentSource;
+import com.dimasukimas.cloudstorage.model.storage.ArtifactType;
+import com.dimasukimas.cloudstorage.model.storage.ContentSource;
 import com.dimasukimas.cloudstorage.security.CustomUserDetails;
 import com.dimasukimas.cloudstorage.service.ResourceService;
 import com.dimasukimas.cloudstorage.swagger.storage.*;
@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -72,7 +71,7 @@ public class ResourceController {
 
         ContentDisposition contentDisposition = ContentDisposition
                 .attachment()
-                .filename(contentSource.getMetadata().filename(), StandardCharsets.UTF_8)
+                .filename(contentSource.getMetadata().filename())
                 .build();
 
         ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.OK)

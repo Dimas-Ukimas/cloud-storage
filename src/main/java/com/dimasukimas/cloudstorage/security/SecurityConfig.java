@@ -34,20 +34,11 @@ public class SecurityConfig {
                 .securityContext(sc -> sc.requireExplicitSave(false))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS,"/**" ).permitAll()
-
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs",
+                        .requestMatchers("/auth/**",
                                 "/v3/api-docs/**",
-                                "/v3/api-docs.yaml"
+                                "/swagger-ui/**"
                         ).permitAll()
-
-                        .requestMatchers("/auth/**"
-                        ).permitAll()
-
                         .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults())
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session
                         .maximumSessions(1))

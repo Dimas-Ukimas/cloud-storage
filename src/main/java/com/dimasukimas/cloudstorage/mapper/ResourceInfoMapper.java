@@ -1,8 +1,8 @@
 package com.dimasukimas.cloudstorage.mapper;
 
 import com.dimasukimas.cloudstorage.dto.ResourceInfoResponseDto;
+import com.dimasukimas.cloudstorage.model.storage.ZipEntrySpec;
 import com.dimasukimas.cloudstorage.repository.StorageObjectInfo;
-import com.dimasukimas.cloudstorage.repository.ZipEntrySpec;
 import com.dimasukimas.cloudstorage.service.PathService;
 import com.dimasukimas.cloudstorage.service.ResourceType;
 import org.mapstruct.Mapper;

@@ -1,7 +1,7 @@
 package com.dimasukimas.cloudstorage.service;
 
 import com.dimasukimas.cloudstorage.dto.ResourceInfoResponseDto;
-import com.dimasukimas.cloudstorage.repository.ContentSource;
+import com.dimasukimas.cloudstorage.model.storage.ContentSource;
 import com.dimasukimas.cloudstorage.validation.SafePath;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,10 +20,10 @@ public interface ResourceService {
 
     List<ResourceInfoResponseDto> upload(Long id, @SafePath String path, List<MultipartFile> files);
 
-    void delete(Long id, @SafePath String path);
+    void delete(Long id, String path);
 
     ContentSource download(Long id, @SafePath String path);
 
-    ResourceInfoResponseDto moveOrRename(Long id, @SafePath String from, @SafePath String to);
+    ResourceInfoResponseDto moveOrRename(Long id, String from, @SafePath String to);
 
 }

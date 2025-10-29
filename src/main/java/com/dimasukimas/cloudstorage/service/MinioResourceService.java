@@ -4,7 +4,12 @@ import com.dimasukimas.cloudstorage.config.StorageProperties;
 import com.dimasukimas.cloudstorage.dto.ResourceInfoResponseDto;
 import com.dimasukimas.cloudstorage.exception.*;
 import com.dimasukimas.cloudstorage.mapper.ResourceInfoMapper;
-import com.dimasukimas.cloudstorage.repository.*;
+import com.dimasukimas.cloudstorage.model.storage.ContentSource;
+import com.dimasukimas.cloudstorage.model.storage.ObjectContentSource;
+import com.dimasukimas.cloudstorage.model.storage.ZipContentSource;
+import com.dimasukimas.cloudstorage.model.storage.ZipEntrySpec;
+import com.dimasukimas.cloudstorage.repository.StorageObjectInfo;
+import com.dimasukimas.cloudstorage.repository.StorageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +20,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -34,7 +40,7 @@ public class MinioResourceService implements ResourceService {
         checkResourceNotExists(fullPath);
         checkParentDirectoriesExist(fullPath);
 
-        log.info("event=directory_creation, status=completed, path={}", path);
+        log.info("event=directory_creation status=completed path={}", path);
         return mapper.toResDto(repository.putEmptyObject(fullPath), getResourceType(fullPath));
     }
 
@@ -43,7 +49,7 @@ public class MinioResourceService implements ResourceService {
         String fullPath = pathService.addRootDirBefore(userId, path);
         checkResourceExists(fullPath);
 
-        log.info("event=get_directory, status=completed,  path={}", path);
+        log.info("event=get_directory status=completed  path={}", path);
         return repository.listChildren(fullPath)
                 .stream()
                 .map(object -> mapper.toResDto(object, getResourceType(object.key())))
@@ -55,7 +61,7 @@ public class MinioResourceService implements ResourceService {
         String fullPath = pathService.addRootDirBefore(userId, path);
         StorageObjectInfo object = repository.findObject(fullPath).orElseThrow(() -> new ResourceNotFoundException("Resource does not exists"));
 
-        log.info("event=get_resource, status=completed, path={}", path);
+        log.info("event=get_resource status=completed path={}", path);
         return mapper.toResDto(object, getResourceType(fullPath));
     }
 
@@ -71,7 +77,7 @@ public class MinioResourceService implements ResourceService {
                 resourcesInfo.add(mapper.toResDto(object, getResourceType(object.key())));
         }
 
-        log.info("event=search_resource, status=completed, query={}", query);
+        log.info("event=search_resource status=completed query={}", query);
         return resourcesInfo;
     }
 
@@ -93,8 +99,14 @@ public class MinioResourceService implements ResourceService {
             }
         }
 
-        log.info("event=upload, status=completed, path={}, fileCount={}, totalBytes={}",
-                path, files.size(), files.stream().mapToLong(MultipartFile::getSize).sum());
+        long totalBytes = uploadedFiles.stream()
+                .map(ResourceInfoResponseDto::size)
+                .filter(Objects::nonNull)
+                .mapToLong(Long::longValue)
+                .sum();
+
+        log.info("event=upload status=completed path={} fileCount={} totalBytes={}",
+                path, files.size(), totalBytes);
         return uploadedFiles;
     }
 
@@ -124,14 +136,20 @@ public class MinioResourceService implements ResourceService {
             }
             String zipName = pathService.truncateEndSplitterIfPresent(pathService.extractResourceName(path));
 
-            log.info("event=download_directory, status=completed, path={} fileCount={} totalBytes={}",
-                    path, zipEntries.size(), zipEntries.stream().mapToLong(ZipEntrySpec::size).sum());
+            long totalBytes = zipEntries.stream()
+                    .map(ZipEntrySpec::size)
+                    .filter(Objects::nonNull)
+                    .mapToLong(Long::longValue)
+                    .sum();
+
+            log.info("event=download_directory status=completed path={} fileCount={} totalBytes={}",
+                    path, zipEntries.size(), totalBytes);
             return new ZipContentSource(zipName, zipEntries);
         }
         ResourceInfoResponseDto resourceMetadata = mapper.toResDto(checkResourceExists(fullPath), getResourceType(fullPath));
         Supplier<InputStream> contentSource = repository.getObjectStream(fullPath);
 
-        log.info("event=download_file, status=completed, path={} fileCount={} totalBytes={}",
+        log.info("event=download_file status=completed path={} fileCount={} totalBytes={}",
                 path, 1, resourceMetadata.size());
         return new ObjectContentSource(contentSource, resourceMetadata);
     }
