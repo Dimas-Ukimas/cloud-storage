@@ -6,12 +6,12 @@ import com.dimasukimas.cloudstorage.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Component
-@Transactional
 @RequiredArgsConstructor
 public class UserTestDataHelper {
 
@@ -22,13 +22,14 @@ public class UserTestDataHelper {
         userRepository.deleteAll();
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public long createUser(String username, String password) {
         User user = User.builder()
                 .username(username)
                 .password(passwordEncoder.encode(password))
                 .role(Role.USER)
                 .build();
-        userRepository.save(user);
+        userRepository.saveAndFlush(user);
 
         return user.getId();
     }

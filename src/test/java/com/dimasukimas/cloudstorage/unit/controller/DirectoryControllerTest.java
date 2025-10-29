@@ -42,9 +42,9 @@ public class DirectoryControllerTest {
 
         when(resourceService.createDirectory(1L, DIRECTORY_PATH)).thenReturn(dirInfo);
 
-        mockMvc.perform(post("/directory").param("key", "folder1/"))
+        mockMvc.perform(post("/directory").param("path", "folder1/"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.key").value(""))
+                .andExpect(jsonPath("$.path").value(""))
                 .andExpect(jsonPath("$.name").value("folder1/"))
                 .andExpect(jsonPath("$.type").value(ResourceType.DIRECTORY.toString()))
                 .andExpect(jsonPath("$.size").doesNotExist());
@@ -55,7 +55,7 @@ public class DirectoryControllerTest {
     void getEmptyDirectoryInfo_shouldReturnNoInfoWithOk() throws Exception {
         when(resourceService.getDirectoryContentInfo(1L, DIRECTORY_PATH)).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/directory").param("key", DIRECTORY_PATH))
+        mockMvc.perform(get("/directory").param("path", DIRECTORY_PATH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
     }
@@ -68,13 +68,13 @@ public class DirectoryControllerTest {
 
         when(resourceService.getDirectoryContentInfo(1L, DIRECTORY_PATH)).thenReturn(List.of(resource1, resource2));
 
-        mockMvc.perform(get("/directory").param("key", DIRECTORY_PATH))
+        mockMvc.perform(get("/directory").param("path", DIRECTORY_PATH))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].key").value("folder1/"))
+                .andExpect(jsonPath("$[0].path").value("folder1/"))
                 .andExpect(jsonPath("$[0].name").value("text.txt"))
                 .andExpect(jsonPath("$[0].size").value("10"))
                 .andExpect(jsonPath("$[0].type").value(ResourceType.FILE.toString()))
-                .andExpect(jsonPath("$[1].key").value("folder1/"))
+                .andExpect(jsonPath("$[1].path").value("folder1/"))
                 .andExpect(jsonPath("$[1].name").value("folder2/"))
                 .andExpect(jsonPath("$[1].size").doesNotExist())
                 .andExpect(jsonPath("$[1].type").value(ResourceType.DIRECTORY.toString()));

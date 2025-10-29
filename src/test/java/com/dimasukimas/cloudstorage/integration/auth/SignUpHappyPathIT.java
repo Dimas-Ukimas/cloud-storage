@@ -47,8 +47,6 @@ public class SignUpHappyPathIT {
 
     private static final String USERNAME = "testUser";
     private static final String PASSWORD = "password";
-    private static final String USER_ROOT_DIRECTORY = "user-1-files/";
-    private static final String SIGN_UP_URL = "/auth/sign-up";
 
     @BeforeEach
     void setUp() {
@@ -60,9 +58,12 @@ public class SignUpHappyPathIT {
     @Test
     public void givenValidUserData_whenSignUp_thenSuccessful() throws Exception {
         ResponseEntity<UsernameRequestDto> response = testRestTemplate.postForEntity(
-                SIGN_UP_URL,
+                "/auth/sign-up",
                 requestHelper.authRequest(USERNAME, PASSWORD),
                 UsernameRequestDto.class);
+
+        long userId = userTestDataHelper.findUser(USERNAME).orElseThrow().getId();
+        String userRootDirectory = "user-" + userId + "-files/";
 
         MinioAuthAssert.create(
                         RedisAssert.create(redisHelper),
@@ -74,7 +75,7 @@ public class SignUpHappyPathIT {
                 .assertJsonContentType()
                 .assertBodyContainsUsername(USERNAME)
                 .assertSetCookieHeader()
-                .assertUserMinioRootDirectoryCreated(USER_ROOT_DIRECTORY)
+                .assertUserMinioRootDirectoryCreated(userRootDirectory)
                 .assertUserExists(USERNAME)
                 .assertRedisSessionCreated();
     }

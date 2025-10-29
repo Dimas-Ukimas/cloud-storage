@@ -5,6 +5,7 @@ import com.dimasukimas.cloudstorage.controller.UserController;
 import com.dimasukimas.cloudstorage.dto.UsernameRequestDto;
 import com.dimasukimas.cloudstorage.exception.handler.GlobalExceptionHandler;
 import com.dimasukimas.cloudstorage.mapper.UserMapper;
+import com.dimasukimas.cloudstorage.security.CustomUserDetails;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -44,14 +45,14 @@ public class UserControllerTest {
     void getCurrentUser_shouldReturnUsernameWithOk() throws Exception {
         UsernameRequestDto usernameRequestDto = new UsernameRequestDto("user");
 
-        when(userMapper.toUserDto(any(UserDetails.class)))
+        when(userMapper.toUserDto(any(CustomUserDetails.class)))
                 .thenReturn(usernameRequestDto);
 
         mockMvc.perform(get("/user/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user"));
 
-        verify(userMapper).toUserDto(argumentCaptor.capture());
+        verify(userMapper).toUserDto((CustomUserDetails) argumentCaptor.capture());
         UserDetails capturedUser = argumentCaptor.getValue();
         assertThat(capturedUser.getUsername()).isEqualTo("user");
     }

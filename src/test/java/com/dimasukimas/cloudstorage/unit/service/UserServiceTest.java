@@ -14,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -37,6 +38,9 @@ public class UserServiceTest {
     @Mock
     private UserMapper userMapper;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private UserService userService;
 
@@ -53,7 +57,7 @@ public class UserServiceTest {
 
         when(passwordEncoder.encode("rawPassword")).thenReturn(encodedPassword);
         when(userRepository.save(any(User.class))).thenReturn(userToSave);
-        when(userMapper.toUserDetails(any(User.class))).thenReturn(new CustomUserDetails(1L,"user", "encodedPassword", List.of()));
+        when(userMapper.toUserDetails(any(User.class))).thenReturn(new CustomUserDetails(1L, "user", "encodedPassword", List.of()));
 
         CustomUserDetails response = userService.signUp(userInfo);
 
@@ -66,7 +70,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void signUp_whenUsernameExists_shouldThrowCustomException(){
+    void signUp_whenUsernameExists_shouldThrowCustomException() {
         AuthRequestDto userInfo = new AuthRequestDto("user", "rawPassword");
 
         when(userRepository.save(any()))
