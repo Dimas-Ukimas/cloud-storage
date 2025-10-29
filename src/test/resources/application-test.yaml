@@ -4,6 +4,21 @@ server:
 
 spring:
 
+  data:
+    redis:
+      host:
+      port:
+
+  datasource:
+    url:
+    username:
+    password:
+
+  minio:
+    url:
+    accessKey: minio
+    secretKey: minio123
+
   session:
     timeout: 1m
 
@@ -15,5 +30,11 @@ spring:
       hibernate:
         format_sql: true
 
+
+
 cors:
   allowedOrigin: http://localhost
+
+app:
+  security:
+    enabled: false

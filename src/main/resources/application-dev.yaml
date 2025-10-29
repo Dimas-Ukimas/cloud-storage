@@ -6,7 +6,7 @@ server:
 spring:
 
   session:
-    timeout: 5m
+    timeout: 60m
 
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -25,6 +25,7 @@ logging:
   level:
     org.springframework.session: DEBUG
     org.springframework.data.redis: DEBUG
+    org.springframework.security: DEBUG
 
 cors:
   allowedOrigin: http://localhost
